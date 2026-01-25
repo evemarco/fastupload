@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
-import { Server, EVENTS } from '@tus/server';
+import { Server } from '@tus/server';
 import { FileStore } from '@tus/file-store';
 import cors from 'cors';
 import path from 'path';
@@ -19,8 +19,14 @@ if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with permissive settings
+app.use(cors({
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Upload-Offset', 'Tus-Resumable', 'Upload-Length', 'Upload-Metadata', 'Upload-Defer-Length', 'X-Requested-With', 'Cache-Control'],
+  exposedHeaders: ['Upload-Offset', 'Tus-Version', 'Tus-Resumable', 'Upload-Length', 'Location'],
+  credentials: false,
+}));
 app.use(express.static('public'));
 
 // TUS Server configuration
@@ -32,15 +38,12 @@ const tusServer = new Server({
   maxFileSize: MAX_FILE_SIZE,
   respectForwardedHeaders: true,
   allowRenaming: true,
-});
-
-// Add event listeners
-tusServer.on(EVENTS.POST_CREATE, (event) => {
-  console.log('Upload created:', event.upload.id);
-});
-
-tusServer.on(EVENTS.POST_FINISH, (event) => {
-  console.log('Upload completed:', event.upload.id, 'Size:', event.upload.offset);
+  onUploadCreate(req, upload) {
+    console.log(`Upload created: ${upload.id}`);
+  },
+  onUploadFinish(req, upload) {
+    console.log(`Upload completed: ${upload.id}, Size: ${upload.offset} bytes`);
+  },
 });
 
 // Mount TUS server
