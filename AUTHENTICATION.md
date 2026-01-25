@@ -157,11 +157,13 @@ If deploying to production, use HTTPS:
 // In server.js
 res.cookie('fastupload_session', sessionKey, {
   httpOnly: true,
-  secure: true, // Set to true for HTTPS
-  sameSite: 'strict',
-  maxAge: 365 * 24 * 60 * 60 * 1000
+  secure: true, // Set to true if using HTTPS
+  sameSite: 'lax',
+  maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
 });
 ```
+
+Note: In development (HTTP), use `secure: false`. For production with HTTPS, change to `secure: true`.
 
 ### 4. Separate Admin Interface
 

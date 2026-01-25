@@ -66,6 +66,57 @@ If you use an external disk for uploads (e.g., `UPLOAD_DIR=/mnt/external/uploads
 - Uploads in memory are preserved
 - When disk is reconnected, uploads can resume
 
+### 4. Offset Correction Logic
+
+FastUpload includes automatic offset correction to handle cases where metadata files are not updated correctly.
+
+**Problem**:
+- Metadata file shows `offset: 0` (no data uploaded)
+- But file on disk has actual data (e.g., 25 GB)
+- User tries to resume, but upload starts from 0%
+
+**Solution**:
+Server automatically detects and corrects this:
+
+```javascript
+// If offset is 0 but file has data, use file size as offset
+let offset = metadata?.offset || 0;
+if (offset === 0 && stats.size > 0 && totalSize > 0) {
+  offset = stats.size;
+  console.log(`Correcting offset for ${filename}: ${offset} bytes (was 0)`);
+}
+```
+
+**How it works**:
+1. Server reads metadata file
+2. Checks if `offset === 0`
+3. Checks if file has actual data (`stats.size > 0`)
+4. If both conditions true, sets `offset = stats.size`
+5. User resumes from actual progress, not 0%
+
+**When this helps**:
+- Network interruption during metadata update
+- Server crash before metadata save
+- External disk disconnection during metadata write
+- Race conditions between file write and metadata update
+
+**Example**:
+```
+Before correction:
+- Metadata: offset = 0
+- File size: 25 GB (25,000,000,000 bytes)
+- Total size: 50 GB
+- Resume from: 0% ❌
+
+After correction:
+- Metadata: offset = 25 GB (corrected)
+- File size: 25 GB (unchanged)
+- Total size: 50 GB
+- Resume from: 50% ✅
+```
+
+**Note**: Correction is automatic. No manual intervention required.
+
 ## Resume Scenarios
 
 ### Scenario 1: Browser Closed

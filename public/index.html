@@ -231,8 +231,22 @@
 
   <script>
     const TUS_ENDPOINT = '/upload';
-    const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB chunks (optimal for most networks)
-    
+    let CHUNK_SIZE = 50 * 1024 * 1024; // Default 50MB chunks (optimal for most networks)
+
+    // Load server configuration
+    async function loadServerConfig() {
+      try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        if (config.chunkSize) {
+          CHUNK_SIZE = config.chunkSize * 1024 * 1024; // Convert MB to bytes
+          console.log(`Server config loaded: chunk size = ${config.chunkSize}MB`);
+        }
+      } catch (error) {
+        console.warn('Failed to load server config, using default chunk size:', error);
+      }
+    }
+
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const uploadList = document.getElementById('uploadList');
@@ -648,7 +662,8 @@
     }
 
     // Load previous uploads when page loads
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadServerConfig(); // Load server config first
       loadPreviousUploads();
     });
 

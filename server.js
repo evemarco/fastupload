@@ -17,6 +17,8 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads')
 const MAX_FILE_SIZE_GB = parseInt(process.env.MAX_FILE_SIZE_GB || '50');
 const MAX_FILE_SIZE = MAX_FILE_SIZE_GB * 1024 * 1024 * 1024;
 const ACCESS_KEY = process.env.ACCESS_KEY || '';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+const CHUNK_SIZE_MB = parseInt(process.env.CHUNK_SIZE_MB || '50');
 
 // Clean up empty files and orphaned metadata on startup
 function cleanupUploads() {
@@ -75,7 +77,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 
 // Enable CORS with permissive settings
 app.use(cors({
-  origin: '*', // Allow all origins
+  origin: CORS_ORIGIN, // Use CORS_ORIGIN from .env
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Upload-Offset', 'Tus-Resumable', 'Upload-Length', 'Upload-Metadata', 'Upload-Defer-Length', 'X-Requested-With', 'Cache-Control'],
   exposedHeaders: ['Upload-Offset', 'Tus-Version', 'Tus-Resumable', 'Upload-Length', 'Location'],
@@ -380,6 +382,15 @@ const tusServer = new Server({
 
 // Mount TUS server
 app.use('/upload', tusServer.handle.bind(tusServer));
+
+// Endpoint to get server configuration
+app.get('/api/config', (req, res) => {
+  res.json({
+    maxFileSize: MAX_FILE_SIZE_GB,
+    chunkSize: CHUNK_SIZE_MB,
+    corsOrigin: CORS_ORIGIN,
+  });
+});
 
 // Endpoint to list completed uploads
 app.get('/api/uploads', (req, res) => {

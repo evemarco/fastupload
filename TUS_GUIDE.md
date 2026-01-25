@@ -187,13 +187,61 @@ FastUpload implements TUS protocol in two parts:
 ```javascript
 // server.js - The server that receives files
 
+// CORS Configuration (from .env)
+app.use(cors({
+  origin: CORS_ORIGIN,  // Use CORS_ORIGIN from .env
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Upload-Offset', 'Tus-Resumable', 'Upload-Length', 'Upload-Metadata'],
+  exposedHeaders: ['Upload-Offset', 'Tus-Version', 'Tus-Resumable', 'Upload-Length', 'Location'],
+}));
+
+// Server Configuration Endpoint
+app.get('/api/config', (req, res) => {
+  res.json({
+    maxFileSize: MAX_FILE_SIZE_GB,
+    chunkSize: CHUNK_SIZE_MB,
+    corsOrigin: CORS_ORIGIN,
+  });
+});
+
 // TUS server configuration
 const tusServer = new Server({
+  path: '/upload',
   datastore: new FileStore({
-    directory: UPLOAD_DIR,  // uploads/ directory
+    directory: UPLOAD_DIR,
   }),
-  path: '/upload',  // TUS endpoint
-  maxSize: MAX_FILE_SIZE,  // 50 GB limit
+  maxFileSize: MAX_FILE_SIZE,
+  respectForwardedHeaders: true,
+
+  // File renaming on upload complete
+  async onUploadFinish(req, upload) {
+    try {
+      const originalFilename = getFilenameFromUpload(upload.id);
+      const ext = getExtension(originalFilename);
+      const baseName = getBaseFilename(originalFilename);
+
+      // Create new filename: original-name-timestamp.ext
+      const timestamp = Date.now();
+      const newFilename = `${baseName}-${timestamp}${ext}`;
+
+      // Rename file
+      fs.renameSync(
+        path.join(UPLOAD_DIR, upload.id),
+        path.join(UPLOAD_DIR, newFilename)
+      );
+
+      // Rename metadata file
+      const oldMetadataPath = path.join(UPLOAD_DIR, `${upload.id}.json`);
+      const newMetadataPath = path.join(UPLOAD_DIR, `${newFilename}.json`);
+      if (fs.existsSync(oldMetadataPath)) {
+        fs.renameSync(oldMetadataPath, newMetadataPath);
+      }
+
+      console.log(`Upload completed: ${newFilename}`);
+    } catch (error) {
+      console.error('Error renaming file:', error);
+    }
+  },
 });
 
 // Express route for TUS
@@ -207,9 +255,24 @@ app.all('/upload', (req, res) => {
 ```javascript
 // public/index.html - The browser that uploads files
 
+let CHUNK_SIZE = 50 * 1024 * 1024; // Default 50MB chunks
+
+// Load server configuration
+async function loadServerConfig() {
+  try {
+    const response = await fetch('/api/config');
+    const config = await response.json();
+    if (config.chunkSize) {
+      CHUNK_SIZE = config.chunkSize * 1024 * 1024; // Convert MB to bytes
+    }
+  } catch (error) {
+    console.warn('Using default chunk size:', error);
+  }
+}
+
 const upload = new tus.Upload(file, {
   endpoint: '/upload',  // TUS server endpoint
-  chunkSize: 50 * 1024 * 1024,  // 50 MB chunks
+  chunkSize: CHUNK_SIZE,  // Use server-provided chunk size
   retryDelays: [0, 1000, 3000, 5000],  // Retry delays
 
   // Upload progress callback
@@ -267,10 +330,19 @@ When you resume:
 
 **Default**: 50 MB
 
-In `.env`:
+**Configuration**: FastUpload uses server-side configuration for chunk size. The frontend automatically loads the chunk size from the server.
+
+**In `.env`**:
 ```
 CHUNK_SIZE_MB=50
 ```
+
+**How it works**:
+
+1. Server reads `CHUNK_SIZE_MB` from `.env`
+2. Server exposes configuration via `/api/config` endpoint
+3. Frontend fetches config on page load
+4. Frontend uses server-provided chunk size for uploads
 
 **Trade-offs**:
 
@@ -284,6 +356,51 @@ CHUNK_SIZE_MB=50
 You can increase or decrease based on your server storage.
 
 **Recommendation**: Use 50 MB for most cases. Smaller (10-25 MB) for unstable networks. Larger (100-200 MB) for very fast networks.
+
+**Note**: To change chunk size, update `CHUNK_SIZE_MB` in `.env` and restart the server. The frontend will automatically use the new chunk size on next page load.
+
+### Server Configuration Endpoint
+
+FastUpload provides a `/api/config` endpoint that returns server configuration to the frontend.
+
+**Request**:
+```http
+GET /api/config
+```
+
+**Response**:
+```json
+{
+  "maxFileSize": 50,
+  "chunkSize": 50,
+  "corsOrigin": "*"
+}
+```
+
+**Fields**:
+- `maxFileSize`: Maximum file size in GB (from `MAX_FILE_SIZE_GB`)
+- `chunkSize`: Chunk size in MB (from `CHUNK_SIZE_MB`)
+- `corsOrigin`: CORS origin setting (from `CORS_ORIGIN`)
+
+**Usage**: The frontend automatically fetches this configuration on page load and uses it for uploads.
+
+### CORS Configuration
+
+**Default**: `*` (allow all origins)
+
+**In `.env`**:
+```
+CORS_ORIGIN=*
+```
+
+**Examples**:
+
+- `*` - Allow all origins (default, public access)
+- `https://yourdomain.com` - Allow specific domain only
+- `http://localhost:3000` - Allow localhost only
+- `https://*.yourdomain.com` - Allow subdomains
+
+**Security**: For production, set `CORS_ORIGIN` to your specific domain to prevent unauthorized access from other websites.
 
 ### Upload Directory
 

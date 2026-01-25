@@ -9,7 +9,7 @@ When you upload files to FastUpload, they are stored in the `uploads/` directory
 Files are renamed automatically when upload completes using this format:
 
 ```
-{original-name}-{timestamp}.{extension}
+original-name-timestamp.extension
 ```
 
 ### Example
