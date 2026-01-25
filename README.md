@@ -322,6 +322,9 @@ Contributions are welcome! Feel free to submit issues and pull requests.
 
 - **[TUS Protocol Guide](./TUS_GUIDE.md)** - Comprehensive guide to understanding the TUS protocol
 - **[VPN & Network Configuration](./VPN_GUIDE.md)** - How to configure FastUpload for VPN access without reverse proxy
+- **[Resume & Persistence Guide](./RESUME_GUIDE.md)** - How interrupted uploads are remembered and resumed
+- **[File Naming & Storage](./FILE_NAMING.md)** - How files are stored and named
+- **[Troubleshooting Guide](./TROUBLESHOOTING.md)** - Solutions to common issues and errors
 - **[Quick Start Guide](./QUICKSTART.md)** - Quick start instructions
 - **[Development Guide](./CONTRIBUTING.md)** - Development workflow and best practices
 - **[Migration Guide](./MIGRATION.md)** - Migration from npm to pnpm

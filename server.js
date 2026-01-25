@@ -10,9 +10,10 @@ const app = express();
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 3000;
 
-// Configuration
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
-const MAX_FILE_SIZE = 50 * 1024 * 1024 * 1024; // 50GB
+// Configuration from .env
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
+const MAX_FILE_SIZE_GB = parseInt(process.env.MAX_FILE_SIZE_GB || '50');
+const MAX_FILE_SIZE = MAX_FILE_SIZE_GB * 1024 * 1024 * 1024;
 
 // Clean up empty files and orphaned metadata on startup
 function cleanupUploads() {
@@ -146,7 +147,7 @@ const tusServer = new Server({
 // Mount TUS server
 app.use('/upload', tusServer.handle.bind(tusServer));
 
-// Endpoint to list uploads
+// Endpoint to list completed uploads
 app.get('/api/uploads', (req, res) => {
   const files = fs.readdirSync(UPLOAD_DIR);
   const uploads = files
@@ -155,7 +156,7 @@ app.get('/api/uploads', (req, res) => {
     .map(filename => {
       const filePath = path.join(UPLOAD_DIR, filename);
       const stats = fs.statSync(filePath);
-      
+
       // Try to get original filename from metadata
       let originalName = filename;
       try {
@@ -167,17 +168,73 @@ app.get('/api/uploads', (req, res) => {
       } catch (error) {
         // If metadata read fails, use filename
       }
-      
+
       return {
         id: filename,
         name: originalName,
         size: stats.size,
         modified: stats.mtime,
-        url: `/upload/${filename}`
+        url: `/upload/${filename}`,
+        status: 'completed'
       };
     })
     .filter(upload => upload.size > 0); // Exclude empty files
   res.json(uploads);
+});
+
+// Endpoint to list in-progress (partial) uploads
+app.get('/api/uploads/partial', (req, res) => {
+  try {
+    const files = fs.readdirSync(UPLOAD_DIR);
+    const partialUploads = files
+      .filter(filename => !filename.endsWith('.json')) // Exclude metadata files
+      .filter(filename => filename.length > 0)
+      .map(filename => {
+        const filePath = path.join(UPLOAD_DIR, filename);
+        const stats = fs.statSync(filePath);
+
+        // Check metadata
+        const metadataPath = path.join(UPLOAD_DIR, `${filename}.json`);
+        let metadata = null;
+
+        if (fs.existsSync(metadataPath)) {
+          try {
+            metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+          } catch (error) {
+            console.error(`Error reading metadata for ${filename}:`, error.message);
+          }
+        }
+
+        // Check if file is empty (in progress) or has data (partial)
+        const isInProgress = stats.size === 0;
+        const isPartial = stats.size > 0 && (!metadata || metadata.offset < metadata.size);
+
+        if (isInProgress || isPartial) {
+          const originalName = metadata?.metadata?.filename || filename;
+          const totalSize = metadata?.size || 0;
+
+          return {
+            id: filename,
+            name: originalName,
+            size: stats.size,
+            totalSize: totalSize,
+            progress: totalSize > 0 ? ((stats.size / totalSize) * 100).toFixed(2) : 0,
+            modified: stats.mtime,
+            creationDate: metadata?.creation_date || stats.mtime,
+            status: isInProgress ? 'in_progress' : 'paused',
+            metadata: metadata
+          };
+        }
+
+        return null;
+      })
+      .filter(upload => upload !== null); // Filter out null entries
+
+    res.json(partialUploads);
+  } catch (error) {
+    console.error('Error listing partial uploads:', error.message);
+    res.status(500).json({ error: 'Failed to list partial uploads', message: error.message });
+  }
 });
 
 // Endpoint to get upload status

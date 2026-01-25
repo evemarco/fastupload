@@ -142,6 +142,11 @@
       color: #f57c00;
     }
 
+    .status.in_progress {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
     .status.completed {
       background: #e8f5e9;
       color: #388e3c;
@@ -188,10 +193,20 @@
       color: white;
     }
 
+    .btn-warning {
+      background: #ff9800;
+      color: white;
+    }
+
     .chunk-info {
       font-size: 12px;
       color: #999;
       margin-top: 5px;
+    }
+
+    .info {
+      color: #666;
+      font-size: 12px;
     }
 
     .speed {
@@ -471,6 +486,145 @@
       const mins = Math.round((seconds % 3600) / 60);
       return hours + 'h ' + mins + 'm';
     }
-  </script>
+
+    // Load previous uploads on page load
+    async function loadPreviousUploads() {
+      try {
+        const response = await fetch('/api/uploads/partial');
+        const partialUploads = await response.json();
+
+        if (partialUploads.length > 0) {
+          console.log(`Found ${partialUploads.length} partial uploads`);
+
+          partialUploads.forEach(partial => {
+            // Check if file source still exists
+            // Note: We can't check from client-side, so we'll mark it as "file_not_found"
+            // and let user handle it
+
+            createPartialUploadItem(partial);
+          });
+        } else {
+          console.log('No previous uploads found');
+        }
+      } catch (error) {
+        console.error('Error loading previous uploads:', error);
+      }
+    }
+
+    // Create UI item for partial upload
+    function createPartialUploadItem(partial) {
+      const uploadId = `partial-${partial.id}`;
+      const displayHost = window.location.host;
+
+      const div = document.createElement('div');
+      div.className = 'upload-item';
+      div.id = uploadId;
+      div.innerHTML = `
+        <h3>${partial.name}</h3>
+        <div class="file-info">
+          <span>Size: ${formatSize(partial.totalSize)} (uploaded: ${formatSize(partial.size)})</span>
+          <span class="status ${partial.status}">${partial.status === 'in_progress' ? 'In Progress' : 'Paused'}</span>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${partial.progress}%"></div>
+          </div>
+          <div class="progress-text">
+            <span class="percentage">${partial.progress}%</span>
+            <span class="size-info">${formatSize(partial.size)} / ${formatSize(partial.totalSize)}</span>
+          </div>
+        </div>
+        <div class="chunk-info">
+          ${partial.status === 'in_progress' ? 'Upload was in progress' : 'Upload was paused'}
+        </div>
+        <div class="progress-text" style="margin-top: 10px;">
+          <span class="info"></span>
+        </div>
+        <div class="actions">
+          <button class="btn btn-warning" onclick="resumePartialUpload('${partial.id}', '${partial.name}')">
+            🔄 Resume
+          </button>
+          <button class="btn btn-danger" onclick="deletePartialUpload('${partial.id}', '${uploadId}')">
+            🗑️ Delete
+          </button>
+        </div>
+      `;
+      uploadList.appendChild(div);
+
+      // Store partial upload info
+      activeUploads.set(uploadId, {
+        partial: partial,
+        status: 'waiting'
+      });
+    }
+
+    // Resume partial upload
+    async function resumePartialUpload(uploadId, originalFilename) {
+      try {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '*/*';
+
+        input.onchange = async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          // Check if filename matches
+          if (file.name !== originalFilename) {
+            if (!confirm(`File name doesn't match!\n\nOriginal: ${originalFilename}\nSelected: ${file.name}\n\nContinue anyway?`)) {
+              return;
+            }
+          }
+
+          // Remove partial upload item
+          const partialId = `partial-${uploadId}`;
+          const item = document.getElementById(partialId);
+          if (item) {
+            item.remove();
+          }
+          activeUploads.delete(partialId);
+
+          // Start new upload
+          await startUpload(file);
+        };
+
+        input.click();
+      } catch (error) {
+        console.error('Error resuming upload:', error);
+        alert('Failed to resume upload. Please select the file manually.');
+      }
+    }
+
+    // Delete partial upload
+    async function deletePartialUpload(uploadId, uploadItemId) {
+      if (!confirm('Are you sure you want to delete this partial upload?')) {
+        return;
+      }
+
+      try {
+        await fetch(`/upload/${uploadId}`, {
+          method: 'DELETE'
+        });
+
+        // Remove from UI
+        const item = document.getElementById(uploadItemId);
+        if (item) {
+          item.remove();
+        }
+        activeUploads.delete(uploadItemId);
+
+        console.log(`Partial upload ${uploadId} deleted`);
+      } catch (error) {
+        console.error('Error deleting partial upload:', error);
+        alert('Failed to delete partial upload');
+      }
+    }
+
+    // Load previous uploads when page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      loadPreviousUploads();
+    });
+
+    </script>
 </body>
 </html>
