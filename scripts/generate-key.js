@@ -33,12 +33,10 @@ function generateKey(length = 32) {
  */
 function updateEnvFile(newKey) {
   let content = '';
-  let fileExists = false;
 
   // Read existing .env file
   if (fs.existsSync(ENV_FILE)) {
     content = fs.readFileSync(ENV_FILE, 'utf8');
-    fileExists = true;
   }
 
   // Check if ACCESS_KEY already exists
@@ -50,14 +48,14 @@ function updateEnvFile(newKey) {
   if (match) {
     // Update existing ACCESS_KEY
     const oldValue = match[1] || '(empty)';
-    console.log(`🔄 Updating existing ACCESS_KEY:`);
+    console.log('🔄 Updating existing ACCESS_KEY:');
     console.log(`   Old: ${oldValue}`);
     console.log(`   New: ${newKey}`);
 
     updatedContent = content.replace(accessKeyRegex, `ACCESS_KEY=${newKey}`);
   } else {
     // Add new ACCESS_KEY
-    console.log(`➕ Adding new ACCESS_KEY:`);
+    console.log('➕ Adding new ACCESS_KEY:');
     console.log(`   New: ${newKey}`);
 
     if (content && !content.endsWith('\n')) {

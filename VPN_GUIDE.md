@@ -37,11 +37,13 @@ pnpm start
 ### Step 4: Access from VPN
 
 Open your browser and navigate to:
+
 ```
 http://YOUR_VPN_IP:3000
 ```
 
 Example:
+
 ```
 http://10.8.0.1:3000
 ```
@@ -100,6 +102,7 @@ PORT=3000
 ```
 
 **Access URLs**:
+
 - Local: `http://localhost:3000`
 - Local Network: `http://192.168.1.100:3000` (your local IP)
 - VPN: `http://10.8.0.1:3000` (your VPN IP)
@@ -119,6 +122,7 @@ PORT=3000
 ```
 
 **Access URL**:
+
 - VPN: `http://10.8.0.1:3000`
 
 **Use case**: When you only want VPN access (more secure)
@@ -136,6 +140,7 @@ PORT=3000
 ```
 
 **Access URL**:
+
 - Local Network: `http://192.168.1.100:3000`
 
 **Use case**: Access from other devices on your local network
@@ -153,6 +158,7 @@ PORT=3000
 ```
 
 **Access URL**:
+
 - Local: `http://localhost:3000`
 
 **Use case**: Local development only (most secure)
@@ -185,6 +191,7 @@ sudo iptables -A INPUT -p tcp --dport 3000 -j ACCEPT
 For production, consider adding HTTPS:
 
 **Option A: Reverse Proxy with SSL**
+
 ```nginx
 server {
     listen 443 ssl;
@@ -200,6 +207,7 @@ server {
 ```
 
 **Option B: Self-Signed Certificate with Node.js**
+
 ```javascript
 import https from 'https';
 import fs from 'fs';
@@ -223,6 +231,7 @@ https.createServer(options, app).listen(PORT, HOST, () => {
 **Solutions**:
 
 1. **Check VPN is connected**
+
    ```bash
    # Check VPN interface
    ip addr show tun0  # or wg0, tap0, etc.
@@ -233,12 +242,14 @@ https.createServer(options, app).listen(PORT, HOST, () => {
    - Re-check IP after VPN reconnection
 
 3. **Check firewall**
+
    ```bash
    sudo ufw status
    sudo ufw allow 3000
    ```
 
 4. **Test with ping**
+
    ```bash
    # Test if VPN IP is reachable
    ping 10.8.0.1
@@ -253,6 +264,7 @@ https.createServer(options, app).listen(PORT, HOST, () => {
 **Solutions**:
 
 1. **Check what's using the port**
+
    ```bash
    # Linux/Mac
    lsof -i :3000
@@ -263,6 +275,7 @@ https.createServer(options, app).listen(PORT, HOST, () => {
    ```
 
 2. **Kill the process**
+
    ```bash
    # Linux/Mac
    kill -9 <PID>
@@ -272,6 +285,7 @@ https.createServer(options, app).listen(PORT, HOST, () => {
    ```
 
 3. **Or use a different port**
+
    ```bash
    # .env
    PORT=3001
@@ -284,24 +298,28 @@ https.createServer(options, app).listen(PORT, HOST, () => {
 **Solutions**:
 
 1. **Check server is running**
+
    ```bash
    # Look for server output
    # Should see: "Server running on http://10.8.0.1:3000"
    ```
 
 2. **Verify HOST and PORT**
+
    ```bash
    # Check .env file
    cat .env | grep -E "^HOST|^PORT"
    ```
 
 3. **Try with 0.0.0.0**
+
    ```bash
    # .env
    HOST=0.0.0.0
    ```
 
 4. **Test with curl**
+
    ```bash
    curl http://10.8.0.1:3000
    ```
@@ -313,6 +331,7 @@ https.createServer(options, app).listen(PORT, HOST, () => {
 **Solutions**:
 
 1. **Check CORS settings**
+
    ```bash
    # .env
    CORS_ORIGIN=*
@@ -323,6 +342,7 @@ https.createServer(options, app).listen(PORT, HOST, () => {
    - Verify it matches: `http://YOUR_VPN_IP:PORT/upload`
 
 3. **Check file permissions**
+
    ```bash
    # Ensure uploads directory is writable
    chmod 755 uploads
@@ -412,6 +432,7 @@ WantedBy=multi-user.target
 ```
 
 Start the service:
+
 ```bash
 sudo systemctl enable fastupload
 sudo systemctl start fastupload
@@ -451,6 +472,7 @@ pnpm exec pm2 startup
 ### Monitoring Uploads
 
 Check active uploads:
+
 ```bash
 # View uploads directory
 ls -lh uploads/

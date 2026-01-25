@@ -5,6 +5,7 @@ This document summarizes the changes made to migrate FastUpload from npm to pnpm
 ## Changes Made
 
 ### 1. Package Manager Migration
+
 - ✅ Migrated from npm to pnpm
 - ✅ Installed pnpm v10.28.0
 - ✅ Created `pnpm-lock.yaml` (22KB)
@@ -12,6 +13,7 @@ This document summarizes the changes made to migrate FastUpload from npm to pnpm
 - ✅ Added `preinstall` hook to enforce pnpm usage
 
 ### 2. Dependency Updates
+
 All packages are now at their latest stable versions (January 2026):
 
 | Package | Old Version | New Version | Status |
@@ -23,10 +25,12 @@ All packages are now at their latest stable versions (January 2026):
 | tus-js-client | 3.1.3 | 3.1.3 | ✓ Already latest (CDN) |
 
 ### 3. Removed Dependencies
+
 - ❌ Removed `multer@2.0.2` (not used)
 - ❌ Removed `tus-node-server@0.9.0` (deprecated, replaced by @tus/server)
 
 ### 4. Code Modernization
+
 - ✅ Converted to ES modules (`import`/`export`)
 - ✅ Added `"type": "module"` to package.json
 - ✅ Updated all `require()` calls to `import` statements in server.js
@@ -35,34 +39,40 @@ All packages are now at their latest stable versions (January 2026):
 ### 5. Documentation Updates
 
 #### package.json
+
 - Added proper description, keywords, and MIT license
 - Added `engines` field for Node.js version requirement
 - Updated scripts for pnpm
 - Added dev dependency `only-allow` for pnpm enforcement
 
 #### README.md
+
 - Added pnpm installation instructions
 - Updated all npm commands to pnpm
 - Added package versions section
 - Added technology stack details with versions
 
 #### QUICKSTART.md
+
 - Added pnpm prerequisites section
 - Updated npm commands to pnpm
 - Added pnpm installation instructions
 
 #### .gitignore
+
 - Added comment that pnpm-lock.yaml should be committed
 - Removed package-lock.json and yarn.lock
 
 ### 6. New Documentation Files
 
 #### CHANGELOG.md
+
 - Version history and changelog format
 - Documentation of v1.0.0 release
 - Dependency version information
 
 #### CONTRIBUTING.md
+
 - Development environment setup
 - pnpm usage guidelines
 - Code style and best practices
@@ -71,6 +81,7 @@ All packages are now at their latest stable versions (January 2026):
 ## Migration Benefits
 
 ### pnpm Advantages
+
 1. **Faster**: Up to 3x faster than npm
 2. **Disk Efficient**: Uses hard links, saves up to 70% disk space
 3. **Strict**: Prevents phantom dependencies
@@ -78,6 +89,7 @@ All packages are now at their latest stable versions (January 2026):
 5. **Modern**: Active development and frequent updates
 
 ### Code Improvements
+
 1. **ES Modules**: Modern JavaScript import syntax
 2. **Type Safety**: Better IDE support and autocompletion
 3. **Performance**: Slightly faster module loading
@@ -86,6 +98,7 @@ All packages are now at their latest stable versions (January 2026):
 ## Usage Comparison
 
 ### Before (npm)
+
 ```bash
 npm install
 npm start
@@ -93,6 +106,7 @@ npm run dev
 ```
 
 ### After (pnpm)
+
 ```bash
 pnpm install
 pnpm start
@@ -121,6 +135,7 @@ New Files:
 ## Verification
 
 All commands have been tested:
+
 - ✅ `pnpm install` - Installs dependencies
 - ✅ `pnpm start` - Starts server
 - ✅ `pnpm run dev` - Starts with file watching
@@ -139,6 +154,7 @@ All commands have been tested:
 ## Rollback (if needed)
 
 If you need to rollback to npm:
+
 ```bash
 rm -rf node_modules pnpm-lock.yaml
 npm install

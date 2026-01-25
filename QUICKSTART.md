@@ -43,6 +43,7 @@ HOST=10.8.0.1 PORT=8080 pnpm start
 The server will show available access URLs:
 
 **Default (HOST=0.0.0.0)**:
+
 ```
 === FastUpload Server ===
 Server running on http://localhost:3000
@@ -57,6 +58,7 @@ TUS endpoint: http://localhost:3000/upload
 ```
 
 **With VPN IP (HOST=10.8.0.1)**:
+
 ```
 === FastUpload Server ===
 Server running on http://10.8.0.1:3000
@@ -68,14 +70,17 @@ TUS endpoint: http://10.8.0.1:3000/upload
 ## 3. Open Your Browser
 
 ### Local Access
+
 Navigate to `http://localhost:3000` in your browser.
 
 ### VPN Access (No Reverse Proxy Needed!)
+
 1. Set your VPN IP as HOST: `HOST=10.8.0.1 pnpm start`
 2. Access directly from VPN: `http://10.8.0.1:3000`
 3. No nginx, Apache, or other reverse proxy required!
 
 ### Local Network Access
+
 1. Default server listens on all interfaces (0.0.0.0)
 2. Find your local IP: `hostname -I` or `ipconfig`
 3. Access: `http://YOUR_LOCAL_IP:3000` (e.g., `http://192.168.1.100:3000`)
@@ -88,22 +93,26 @@ Navigate to `http://localhost:3000` in your browser.
 ## Key Features
 
 ### Chunked Uploads
+
 - Files are split into 50MB chunks
 - Optimal for large files up to 50GB
 - Memory-efficient (no full file in RAM)
 
 ### Resume Capability
+
 - If upload is interrupted, click "Resume"
 - System detects and skips completed chunks
 - Works even after browser refresh
 
 ### Progress Tracking
+
 - Real-time percentage display
 - Upload speed (MB/s)
 - Estimated time remaining
 - Chunk-by-chunk completion status
 
 ### Multi-file Upload
+
 - Upload multiple files simultaneously
 - Each file has independent progress
 - Pause/resume individual uploads
@@ -138,16 +147,19 @@ Navigate to `http://localhost:3000` in your browser.
 ## Troubleshooting
 
 ### Upload fails immediately
+
 - Check disk space
 - Verify `uploads/` directory is writable
 - Review server console for errors
 
 ### Slow uploads
+
 - Check network speed
 - Try smaller chunk size
 - Test with smaller files first
 
 ### Resume doesn't work
+
 - Ensure browser didn't clear localStorage
 - Check server is still running
 - Verify file hasn't been modified
@@ -163,6 +175,7 @@ Navigate to `http://localhost:3000` in your browser.
 ## Support
 
 For issues or questions:
+
 - Check the [README.md](./README.md) troubleshooting section
 - Review browser console for errors
 - Check server logs for error messages

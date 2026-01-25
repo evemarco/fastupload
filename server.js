@@ -25,17 +25,17 @@ function cleanupUploads() {
   try {
     const files = fs.readdirSync(UPLOAD_DIR);
     const deleted = [];
-    
+
     files.forEach(filename => {
       try {
         const filePath = path.join(UPLOAD_DIR, filename);
         const stats = fs.statSync(filePath);
-        
+
         // Delete empty files
         if (stats.isFile() && stats.size === 0 && !filename.endsWith('.json')) {
           fs.unlinkSync(filePath);
           deleted.push(filename);
-          
+
           // Also delete corresponding metadata file
           const metadataPath = path.join(UPLOAD_DIR, `${filename}.json`);
           if (fs.existsSync(metadataPath)) {
@@ -43,7 +43,7 @@ function cleanupUploads() {
             deleted.push(`${filename}.json`);
           }
         }
-        
+
         // Delete orphaned metadata files (no corresponding file)
         if (filename.endsWith('.json')) {
           const baseFilename = filename.replace('.json', '');
@@ -58,7 +58,7 @@ function cleanupUploads() {
         console.error(`Skipping ${filename} during cleanup:`, error.message);
       }
     });
-    
+
     if (deleted.length > 0) {
       console.log(`Cleaned up ${deleted.length} files: ${deleted.slice(0, 5).join(', ')}${deleted.length > 5 ? '...' : ''}`);
     }
@@ -139,7 +139,7 @@ app.use((req, res, next) => {
         httpOnly: true,
         secure: false, // Set to true if using HTTPS
         sameSite: 'lax',
-        maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+        maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
       });
     }
     return next();
@@ -310,7 +310,7 @@ app.post('/api/login', (req, res) => {
     httpOnly: true,
     secure: false, // Set to true if using HTTPS
     sameSite: 'lax',
-    maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+    maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
   });
 
   res.redirect('/');
@@ -353,25 +353,25 @@ const tusServer = new Server({
       const originalFilename = getFilenameFromUpload(upload.id);
       const ext = getExtension(originalFilename);
       const baseName = getBaseFilename(originalFilename);
-      
+
       // Create new filename: original-name-timestamp.ext
       const timestamp = Date.now();
       const newFilename = `${baseName}-${timestamp}${ext}`;
-      
+
       const oldPath = path.join(UPLOAD_DIR, upload.id);
       const newPath = path.join(UPLOAD_DIR, newFilename);
-      
+
       // Rename the file
       fs.renameSync(oldPath, newPath);
-      
+
       // Also rename the metadata file
       const oldMetadataPath = path.join(UPLOAD_DIR, `${upload.id}.json`);
       const newMetadataPath = path.join(UPLOAD_DIR, `${newFilename}.json`);
-      
+
       if (fs.existsSync(oldMetadataPath)) {
         fs.renameSync(oldMetadataPath, newMetadataPath);
       }
-      
+
       console.log(`Upload completed: ${newFilename} (original: ${originalFilename}), Size: ${upload.offset} bytes`);
     } catch (error) {
       console.error(`Error renaming file ${upload.id}:`, error.message);
@@ -410,7 +410,7 @@ app.get('/api/uploads', (req, res) => {
           const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
           originalName = metadata.metadata?.filename || filename;
         }
-      } catch (error) {
+      } catch {
         // If metadata read fails, use filename
       }
 
@@ -420,7 +420,7 @@ app.get('/api/uploads', (req, res) => {
         size: stats.size,
         modified: stats.mtime,
         url: `/upload/${filename}`,
-        status: 'completed'
+        status: 'completed',
       };
     })
     .filter(upload => upload.size > 0); // Exclude empty files
@@ -467,7 +467,6 @@ app.get('/api/uploads/partial', (req, res) => {
         // Check if file is empty (in progress) or has data (partial)
         const isInProgress = stats.size === 0;
         const isPartial = stats.size > 0 && stats.size < totalSize;
-        const isCompleted = stats.size > 0 && stats.size >= totalSize;
 
         // Only return incomplete uploads
         if (isInProgress || isPartial) {
@@ -484,7 +483,7 @@ app.get('/api/uploads/partial', (req, res) => {
             creationDate: metadata?.creation_date || stats.mtime,
             status: isInProgress ? 'in_progress' : 'paused',
             metadata: metadata,
-            hasData: stats.size > 0
+            hasData: stats.size > 0,
           };
         }
 
@@ -515,7 +514,7 @@ app.get('/api/uploads/:id', (req, res) => {
     name: filename,
     size: stats.size,
     modified: stats.mtime,
-    isComplete: true
+    isComplete: true,
   });
 });
 
@@ -531,23 +530,23 @@ app.get('/api/uploads/:id/status', (req, res) => {
   const stats = fs.statSync(filePath);
   res.json({
     offset: stats.size,
-    size: stats.size
+    size: stats.size,
   });
 });
 
 app.listen(PORT, HOST, () => {
   const displayHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
-  console.log(`\n=== FastUpload Server ===`);
+  console.log('\n=== FastUpload Server ===');
   console.log(`Server running on http://${displayHost}:${PORT}`);
   console.log(`Upload directory: ${UPLOAD_DIR}`);
   console.log(`Max file size: ${MAX_FILE_SIZE / (1024 * 1024 * 1024)} GB`);
   console.log(`TUS endpoint: http://${displayHost}:${PORT}/upload`);
-  
+
   if (HOST === '0.0.0.0') {
-    console.log(`\n💡 Accessible via:`);
+    console.log('\n💡 Accessible via:');
     console.log(`   - Local: http://localhost:${PORT}`);
     console.log(`   - Network: http://YOUR_LOCAL_IP:${PORT}`);
     console.log(`   - VPN: http://YOUR_VPN_IP:${PORT}`);
   }
-  console.log(`========================\n`);
+  console.log('========================\n');
 });

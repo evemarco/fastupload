@@ -26,6 +26,7 @@ This guide explains the **TUS protocol** (The Upload Standard) in simple terms, 
 It's a standardized way to transfer files between a computer (your browser) and a server. It's like a common language that both understand to ensure the transfer is done correctly.
 
 ### Key Points:
+
 - ✅ **Open Standard** - Free and accessible to everyone
 - ✅ **Automatic Resume** - If it cuts off, it resumes where it stopped
 - ✅ **Compatible** - Works everywhere (Chrome, Firefox, Safari, mobile...)
@@ -47,6 +48,7 @@ Imagine you need to send a **50 GB file** (size of 50 full movies or 10,000 phot
 50 GB file → Divided into 1,000 pieces → Upload piece by piece
 
 **If it cuts off at 99%**:
+
 - ✅ You already have 990 pieces sent
 - ✅ You have 10 pieces left
 - ✅ **You resume at 99%, not 0%**! 🎉
@@ -73,11 +75,13 @@ Server: "All pieces received! Upload complete!"
 ### Key Concept: **Offset**
 
 The **offset** is the position where the upload is:
+
 - **Offset: 0** → 0 bytes uploaded (start)
 - **Offset: 100 MB** → 100 MB uploaded (20%)
 - **Offset: 50 GB** → 50 GB uploaded (100%)
 
 When you resume an upload:
+
 1. Server checks offset (e.g., 30 GB)
 2. Browser uploads from offset (30 GB to 50 GB)
 3. Only the remaining 20 GB is uploaded!
@@ -109,11 +113,13 @@ Imagine you're moving from one house to another.
 ### Problem 1: Unstable Internet
 
 **Without TUS**:
+
 - Upload starts at 0%
 - Internet cuts at 95%
 - You restart at **0%**! 😢
 
 **With TUS**:
+
 - Upload starts at 0%
 - Internet cuts at 95%
 - You resume at **95%**! 🎉
@@ -121,11 +127,13 @@ Imagine you're moving from one house to another.
 ### Problem 2: Network Timeout
 
 **Without TUS**:
+
 - Large file takes 2 hours to upload
 - Server timeout after 1 hour
 - Upload fails, restart at **0%**!
 
 **With TUS**:
+
 - Large file divided into small pieces
 - Each piece takes 10 seconds
 - Server timeout: 1 hour (3600 seconds)
@@ -135,12 +143,14 @@ Imagine you're moving from one house to another.
 ### Problem 3: Full Upload Corrupted
 
 **Without TUS**:
+
 - 50 GB file uploaded in one piece
 - One byte corrupted during transfer
 - Entire file corrupted!
 - Restart from **0%**!
 
 **With TUS**:
+
 - 50 GB file divided into 1,000 pieces
 - One piece corrupted during transfer
 - Only that one piece is corrupted!
@@ -163,11 +173,13 @@ Imagine you're moving from one house to another.
 ### Real Example: 50 GB File
 
 **Without TUS**:
+
 - 50 GB uploaded in one piece
 - If it cuts off at 99%...
 - **You restart from 0%** (50 GB to upload again!)
 
 **With TUS**:
+
 - 50 GB divided into 1,000 pieces (50 MB each)
 - If it cuts off at 99% (990 pieces)...
 - **You resume at 99%** (only 10 pieces left to upload)
@@ -315,11 +327,13 @@ TUS creates a metadata file for each upload:
 ```
 
 **`offset`** indicates where upload is:
+
 - **offset: 0** → 0 bytes (0%)
 - **offset: 26843545600** → 25 GB (50%)
 - **offset: 53687091200** → 50 GB (100%)
 
 When you resume:
+
 - Browser reads `offset` from server
 - Uploads from `offset` to end
 - Only remaining bytes are uploaded
@@ -333,6 +347,7 @@ When you resume:
 **Configuration**: FastUpload uses server-side configuration for chunk size. The frontend automatically loads the chunk size from the server.
 
 **In `.env`**:
+
 ```
 CHUNK_SIZE_MB=50
 ```
@@ -364,11 +379,13 @@ You can increase or decrease based on your server storage.
 FastUpload provides a `/api/config` endpoint that returns server configuration to the frontend.
 
 **Request**:
+
 ```http
 GET /api/config
 ```
 
 **Response**:
+
 ```json
 {
   "maxFileSize": 50,
@@ -378,6 +395,7 @@ GET /api/config
 ```
 
 **Fields**:
+
 - `maxFileSize`: Maximum file size in GB (from `MAX_FILE_SIZE_GB`)
 - `chunkSize`: Chunk size in MB (from `CHUNK_SIZE_MB`)
 - `corsOrigin`: CORS origin setting (from `CORS_ORIGIN`)
@@ -389,6 +407,7 @@ GET /api/config
 **Default**: `*` (allow all origins)
 
 **In `.env`**:
+
 ```
 CORS_ORIGIN=*
 ```
@@ -409,6 +428,7 @@ CORS_ORIGIN=*
 Files are stored in `uploads/` directory with hash IDs and metadata files.
 
 **Example**:
+
 ```
 uploads/
 ├── abc123def456              ← Partial file (25 GB)
@@ -424,6 +444,7 @@ uploads/
 **A**: Nothing is lost. TUS saves progress in metadata files on the server.
 
 **How it works**:
+
 - Browser closes at 50% upload
 - Server has 50% of file saved
 - Metadata file shows offset: 50%
@@ -436,6 +457,7 @@ uploads/
 **A**: Yes, TUS is secure when properly implemented.
 
 **Security features**:
+
 - ✅ HTTPS/TLS encryption (recommended)
 - ✅ File integrity verification (each chunk)
 - ✅ Unique upload IDs (prevents conflicts)
@@ -447,6 +469,7 @@ uploads/
 ### Q3: Is TUS slower than traditional upload?
 
 **A**: No, speed is almost identical. In fact, it's **faster** because:
+
 - Less data to upload (resume capability)
 - Streaming (low memory usage)
 - Parallel uploads possible
@@ -455,6 +478,7 @@ uploads/
 **Overhead**: Very small (few KB per chunk for metadata).
 
 **Example**: 50 GB file at 10 MB/s
+
 - Traditional upload: 5000 seconds (83.3 minutes)
 - TUS upload: 5000 seconds (same)
 - Resume at 50%: Only 2500 seconds (41.7 minutes) to finish!
@@ -464,6 +488,7 @@ uploads/
 **A**: Yes! FastUpload supports parallel uploads. You can upload 5, 10, or even 20 files simultaneously, each with its own progress.
 
 **How it works**:
+
 - Each file gets its own TUS upload ID
 - Each file has its own offset
 - Each file uploads independently
@@ -474,6 +499,7 @@ uploads/
 **A**: Uploads are not lost. Metadata files are saved on disk.
 
 **How it works**:
+
 - Upload at 75% when server restarts
 - Server restarts
 - Metadata file on disk shows offset: 75%
@@ -487,6 +513,7 @@ uploads/
 **A**: No, you must resume from the same computer with the same file.
 
 **Why**:
+
 - TUS tracks progress by upload ID and file checksum
 - Different computer = different file path/ID
 - To resume, you need:
@@ -501,12 +528,14 @@ uploads/
 **A**: Yes, with proper configuration.
 
 **Requirements**:
+
 - Sufficient disk space on server
 - `MAX_FILE_SIZE_GB` set high enough in `.env`
 - `client_max_body_size` set high enough in Nginx (if using)
 - Fast and stable internet connection
 
 **Configuration**:
+
 ```bash
 # .env
 MAX_FILE_SIZE_GB=200  # Allow 200 GB files
@@ -519,6 +548,7 @@ MAX_FILE_SIZE_GB=200  # Allow 200 GB files
 **A**: No! TUS verifies each chunk. If a chunk is corrupted, it's automatically re-uploaded. At the end, the server verifies complete integrity.
 
 **How it works**:
+
 - Chunk uploaded → Server verifies checksum
 - Checksum mismatch → Chunk corrupted
 - Server rejects chunk
@@ -530,6 +560,7 @@ MAX_FILE_SIZE_GB=200  # Allow 200 GB files
 **A**: Thanks to the **unique upload ID**. Each upload has a serial number. The server keeps in memory: "For ID abc123, I received 450 chunks".
 
 **Metadata file**:
+
 ```json
 {
   "id": "abc123",
@@ -539,6 +570,7 @@ MAX_FILE_SIZE_GB=200  # Allow 200 GB files
 ```
 
 When you resume:
+
 - Browser provides upload ID: abc123
 - Server reads metadata file
 - Returns offset: 22500000000 (45%)
@@ -549,12 +581,14 @@ When you resume:
 **A**: **No!** For the end user, it's as simple as drag-and-drop a file. TUS works in the background, automatically.
 
 **User experience**:
+
 - Drag and drop file
 - Upload starts with progress bar
 - If interrupted, resume automatically
 - No manual intervention needed
 
 **Developer experience**:
+
 - TUS server: Easy to configure (like Express routes)
 - TUS client: Simple API (upload.start(), upload.resume())
 - Well-documented

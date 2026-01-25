@@ -63,6 +63,7 @@ sudo systemctl reload nginx
 ### 5. Test
 
 Visit your domain:
+
 ```
 http://your-domain.com
 ```
@@ -213,6 +214,7 @@ sudo certbot --nginx -d your-domain.com -d www.your-domain.com
 ```
 
 Certbot will automatically:
+
 - Obtain SSL certificate
 - Update Nginx configuration
 - Redirect HTTP to HTTPS
@@ -386,6 +388,7 @@ tail -f /path/to/fastupload/logs/fastupload.log
 **Symptoms**: Upload fails with "413" error
 
 **Solution**:
+
 ```bash
 # Check client_max_body_size in Nginx config
 grep client_max_body_size /etc/nginx/sites-available/fastupload
@@ -406,6 +409,7 @@ sudo systemctl reload nginx
 **Symptoms**: Upload fails with "504" error during large file upload
 
 **Solution**:
+
 ```bash
 # Check timeout values in Nginx config
 grep timeout /etc/nginx/sites-available/fastupload
@@ -428,6 +432,7 @@ sudo systemctl reload nginx
 **Symptoms**: Uploads don't resume after interruption
 
 **Solution**:
+
 ```bash
 # Check proxy_request_buffering
 grep proxy_request_buffering /etc/nginx/sites-available/fastupload
@@ -455,6 +460,7 @@ sudo systemctl reload nginx
 **Symptoms**: Browser shows CORS errors
 
 **Solution**:
+
 ```bash
 # Nginx configuration includes CORS headers
 # If issues persist, add explicit CORS:
@@ -475,6 +481,7 @@ sudo systemctl reload nginx
 **Symptoms**: "502 Bad Gateway" error
 
 **Solution**:
+
 ```bash
 # Check if FastUpload is running
 ps aux | grep "node server.js"
@@ -497,6 +504,7 @@ sudo tail -f /var/log/nginx/fastupload_error.log
 **Symptoms**: Can't access via domain, only works via IP
 
 **Solution**:
+
 ```bash
 # 1. Check DNS records
 # A record: your-domain.com → YOUR_SERVER_IP
@@ -523,6 +531,7 @@ sudo systemctl reload nginx
 **Symptoms**: HTTP works, HTTPS shows error or connection refused
 
 **Solution**:
+
 ```bash
 # 1. Check if HTTPS server block is enabled
 grep -A 5 "listen 443" /etc/nginx/sites-available/fastupload
@@ -552,6 +561,7 @@ curl -I https://your-domain.com
 **Symptoms**: `nginx -t` shows errors
 
 **Solution**:
+
 ```bash
 # Test configuration
 sudo nginx -t
@@ -717,6 +727,7 @@ location /nginx_status {
 ```
 
 Access stats:
+
 ```bash
 curl http://localhost/nginx_status
 ```
@@ -734,8 +745,9 @@ sudo tail -f /var/log/nginx/error.log
 ### 3. Log Analysis
 
 Use tools to analyze logs:
+
 - GoAccess: `goaccess /var/log/nginx/fastupload_access.log`
-- Nginx Log Analyzer: https://github.com/mason-lai/nginx-log-analyzer
+- Nginx Log Analyzer: <https://github.com/mason-lai/nginx-log-analyzer>
 
 ## Backup and Recovery
 

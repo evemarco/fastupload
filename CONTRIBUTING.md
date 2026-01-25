@@ -183,6 +183,7 @@ pnpm publish
 ## Questions?
 
 For issues or questions:
+
 - Check [README.md](./README.md) for common problems
 - Review browser console for client-side errors
 - Check server logs for backend errors

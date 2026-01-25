@@ -3,6 +3,7 @@
 ## Overview
 
 FastUpload automatically remembers and can resume **interrupted uploads**, even if:
+
 - ✅ Browser is closed or refreshed
 - ✅ Server is restarted
 - ✅ Network connection is lost
@@ -22,6 +23,7 @@ uploads/
 ```
 
 The **metadata file** contains:
+
 ```json
 {
   "id": "3aff8c6abb9a421cb0168a9da0e02b92",
@@ -36,6 +38,7 @@ The **metadata file** contains:
 ```
 
 **Key Points**:
+
 - `offset` shows progress (how many bytes uploaded)
 - `size` is total file size
 - `offset < size` = upload in progress or paused
@@ -45,10 +48,12 @@ The **metadata file** contains:
 ### 2. Client-Side Persistence
 
 The browser stores upload information in:
+
 - **IndexedDB** (primary storage, large capacity)
 - **localStorage** (fallback, limited)
 
 This allows:
+
 - Remembering uploads across browser sessions
 - Detecting partial uploads when page loads
 - Prompting to resume interrupted uploads
@@ -58,10 +63,12 @@ This allows:
 If you use an external disk for uploads (e.g., `UPLOAD_DIR=/mnt/external/uploads`):
 
 **When disk is connected**:
+
 - Uploads work normally
 - Partial uploads are saved to disk
 
 **When disk is disconnected**:
+
 - Server still starts successfully
 - Uploads in memory are preserved
 - When disk is reconnected, uploads can resume
@@ -71,6 +78,7 @@ If you use an external disk for uploads (e.g., `UPLOAD_DIR=/mnt/external/uploads
 FastUpload includes automatic offset correction to handle cases where metadata files are not updated correctly.
 
 **Problem**:
+
 - Metadata file shows `offset: 0` (no data uploaded)
 - But file on disk has actual data (e.g., 25 GB)
 - User tries to resume, but upload starts from 0%
@@ -88,6 +96,7 @@ if (offset === 0 && stats.size > 0 && totalSize > 0) {
 ```
 
 **How it works**:
+
 1. Server reads metadata file
 2. Checks if `offset === 0`
 3. Checks if file has actual data (`stats.size > 0`)
@@ -95,12 +104,14 @@ if (offset === 0 && stats.size > 0 && totalSize > 0) {
 5. User resumes from actual progress, not 0%
 
 **When this helps**:
+
 - Network interruption during metadata update
 - Server crash before metadata save
 - External disk disconnection during metadata write
 - Race conditions between file write and metadata update
 
 **Example**:
+
 ```
 Before correction:
 - Metadata: offset = 0
@@ -166,6 +177,7 @@ GET /api/uploads
 ```
 
 Response:
+
 ```json
 [
   {
@@ -186,6 +198,7 @@ GET /api/uploads/partial
 ```
 
 Response:
+
 ```json
 [
   {
@@ -207,6 +220,7 @@ Response:
 ```
 
 **Status Values**:
+
 - `in_progress` - Upload was actively running when interrupted
 - `paused` - Upload was paused or stopped
 
@@ -234,6 +248,7 @@ When you open the upload page:
 5. **Upload** continues from where it stopped
 
 **File Matching**:
+
 - If filename matches exactly → Resume automatically
 - If filename doesn't match → Prompt to confirm
 - This prevents resuming wrong file
@@ -319,6 +334,7 @@ files.forEach(filename => {
 **Solutions**:
 
 1. **Check API endpoint**:
+
    ```bash
    curl http://YOUR_HOST:PORT/api/uploads/partial
    ```
@@ -332,6 +348,7 @@ files.forEach(filename => {
    - `Cmd + Shift + R` (Mac)
 
 4. **Check uploads directory**:
+
    ```bash
    ls -la uploads/
    # Should see both files and .json metadata files
@@ -349,12 +366,14 @@ files.forEach(filename => {
    - File content must be same (use same file!)
 
 2. **Check metadata file**:
+
    ```bash
    cat uploads/PARTIAL_ID.json
    # Check that "offset" and "size" are correct
    ```
 
 3. **Check server logs**:
+
    ```bash
    pnpm start
    # Should see: "Upload completed: ..."
@@ -367,12 +386,14 @@ files.forEach(filename => {
 **Solutions**:
 
 1. **Delete old partials**:
+
    ```bash
    # Delete partial uploads older than 7 days
    find uploads/ -name "*.json" -mtime +7 -exec rm {} \;
    ```
 
 2. **Add cleanup cron job**:
+
    ```bash
    # Run daily cleanup
    0 3 * * * /path/to/cleanup-script.sh
@@ -389,10 +410,12 @@ files.forEach(filename => {
 **Solution**:
 
 The server handles this gracefully:
+
 1. Uploads in memory are preserved
 2. When disk is reconnected, uploads can resume
 
 **To improve**:
+
 - Use a monitoring script to check disk connectivity
 - Display disk status in UI
 - Notify user when disk is disconnected
@@ -402,6 +425,7 @@ The server handles this gracefully:
 ### 1. Test Resume Functionality
 
 Before relying on resume for important uploads:
+
 1. Start a large upload (>100MB)
 2. Pause or interrupt at 50%
 3. Close browser
@@ -412,6 +436,7 @@ Before relying on resume for important uploads:
 ### 2. Monitor Disk Space
 
 Partial uploads use disk space:
+
 - Keep track of `uploads/` directory size
 - Clean up old partials regularly
 - Set up alerts for low disk space
@@ -424,10 +449,12 @@ watch -n 10 'du -sh uploads/'
 ### 3. Backup Metadata Files
 
 Metadata files are critical for resume:
+
 - They contain progress information
 - Losing them means starting over
 
 **Backup strategy**:
+
 ```bash
 # Backup metadata files periodically
 rsync -av uploads/*.json /backup/metadata/
@@ -436,6 +463,7 @@ rsync -av uploads/*.json /backup/metadata/
 ### 4. Use Appropriate Chunk Sizes
 
 Chunk size affects resume:
+
 - **Smaller chunks** (10-25MB): Better resume, more overhead
 - **Larger chunks** (50-200MB): Faster, harder to resume
 

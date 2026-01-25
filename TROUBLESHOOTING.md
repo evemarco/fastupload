@@ -7,6 +7,7 @@ This guide helps you diagnose and fix common issues with FastUpload.
 ## 🔴 TUS Upload Creation Error
 
 ### Error Message
+
 ```
 tus: unexpected response while creating upload, originated from request
 (method: POST, url: /upload, response code: 500,
@@ -16,6 +17,7 @@ request id: n/a)
 ```
 
 ### Root Cause
+
 This error occurs when the TUS server's event handlers are incorrectly configured. The code tries to access `event.upload.id` but `event.upload` is undefined.
 
 ### ✅ Solution (Already Fixed)
@@ -23,6 +25,7 @@ This error occurs when the TUS server's event handlers are incorrectly configure
 The issue has been fixed in the latest version. Event handlers now use the correct `@tus/server` syntax:
 
 **Before (Incorrect)**:
+
 ```javascript
 import { Server, EVENTS } from '@tus/server';
 
@@ -34,6 +37,7 @@ tusServer.on(EVENTS.POST_CREATE, (event) => {
 ```
 
 **After (Correct)**:
+
 ```javascript
 import { Server } from '@tus/server';
 
@@ -51,11 +55,13 @@ const tusServer = new Server({
 ### How to Verify the Fix
 
 1. Check your `server.js` file:
+
    ```bash
    cat server.js | grep -A 5 "onUploadCreate"
    ```
 
 2. Should show:
+
    ```javascript
    onUploadCreate(req, upload) {
      console.log(`Upload created: ${upload.id}`);
@@ -63,6 +69,7 @@ const tusServer = new Server({
    ```
 
 3. NOT this:
+
    ```javascript
    tusServer.on(EVENTS.POST_CREATE, (event) => {
      console.log('Upload created:', event.upload.id);
@@ -72,6 +79,7 @@ const tusServer = new Server({
 ### If Error Persists
 
 1. **Restart the server**:
+
    ```bash
    pnpm start
    ```
@@ -81,6 +89,7 @@ const tusServer = new Server({
    - Or: DevTools → Network tab → Disable cache checkbox
 
 3. **Check server logs**:
+
    ```bash
    # Server should show: "Server running on http://..."
    # When uploading, should show: "Upload created: ..."
@@ -96,11 +105,13 @@ const tusServer = new Server({
 ## 🟡 CORS Errors
 
 ### Error Message
+
 ```
 Access to XMLHttpRequest at 'http://...' has been blocked by CORS policy
 ```
 
 ### Root Cause
+
 Server is not properly configured to allow cross-origin requests.
 
 ### ✅ Solution
@@ -140,6 +151,7 @@ app.use(cors({
    - Look for CORS errors
 
 2. **Check server headers**:
+
    ```bash
    curl -I http://YOUR_HOST:PORT/upload
 
@@ -157,11 +169,13 @@ app.use(cors({
 ## 🟠 Upload Directory Errors
 
 ### Error Message
+
 ```
 Error: ENOENT: no such file or directory, open '.../uploads/...'
 ```
 
 ### Root Cause
+
 The `uploads/` directory doesn't exist.
 
 ### ✅ Solution
@@ -182,6 +196,7 @@ ls -ld uploads
 ### If Error Persists
 
 1. **Check directory path**:
+
    ```bash
    # In server.js, check:
    # const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
@@ -191,6 +206,7 @@ ls -ld uploads
    ```
 
 2. **Check file system permissions**:
+
    ```bash
    # Check if user has write permission
    touch uploads/test
@@ -198,6 +214,7 @@ ls -ld uploads
    ```
 
 3. **Check disk space**:
+
    ```bash
    df -h
    # Ensure sufficient disk space for uploads
@@ -208,16 +225,19 @@ ls -ld uploads
 ## 🔵 Server Startup Errors
 
 ### Error Message
+
 ```
 Error: listen EADDRINUSE: address already in use :::3000
 ```
 
 ### Root Cause
+
 Port 3000 is already in use by another process.
 
 ### ✅ Solution
 
 1. **Find process using port**:
+
    ```bash
    # Linux/Mac
    lsof -i :3000
@@ -229,6 +249,7 @@ Port 3000 is already in use by another process.
    ```
 
 2. **Kill the process**:
+
    ```bash
    # Linux/Mac
    kill -9 <PID>
@@ -238,22 +259,26 @@ Port 3000 is already in use by another process.
    ```
 
 3. **Or use a different port**:
+
    ```bash
    # In .env file
    PORT=3001
    ```
 
 ### Error Message
+
 ```
 Error: listen EADDRNOTAVAIL: address not available
 ```
 
 ### Root Cause
+
 HOST address is invalid or not available.
 
 ### ✅ Solution
 
 1. **Check your VPN/local IP**:
+
    ```bash
    # Linux/Mac
    ip addr show
@@ -263,6 +288,7 @@ HOST address is invalid or not available.
    ```
 
 2. **Update .env with correct IP**:
+
    ```bash
    # Use valid IP addresses:
    HOST=0.0.0.0           # All interfaces
@@ -290,6 +316,7 @@ HOST address is invalid or not available.
    - Check if tus-js-client is loaded correctly
 
 3. **Verify chunk size**:
+
    ```javascript
    // In public/index.html
    const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB
@@ -308,6 +335,7 @@ HOST address is invalid or not available.
 ### ✅ Solution
 
 1. **Check network connection**:
+
    ```bash
    ping google.com
    # or
@@ -315,6 +343,7 @@ HOST address is invalid or not available.
    ```
 
 2. **Check server logs**:
+
    ```bash
    # Should see upload progress
    # Upload created: ...
@@ -322,12 +351,14 @@ HOST address is invalid or not available.
    ```
 
 3. **Check available disk space**:
+
    ```bash
    df -h uploads/
    # Ensure sufficient space
    ```
 
 4. **Restart server**:
+
    ```bash
    pnpm start
    ```
@@ -347,6 +378,7 @@ HOST address is invalid or not available.
    - They should contain upload IDs
 
 2. **Check server for partial uploads**:
+
    ```bash
    # Look for .info files or partial uploads
    ls -la uploads/
@@ -360,6 +392,7 @@ HOST address is invalid or not available.
 
 4. **Check TUS endpoint**:
    - Verify HEAD request works:
+
    ```bash
    curl -I http://YOUR_HOST:PORT/upload/UPLOAD_ID
    ```
@@ -373,6 +406,7 @@ HOST address is invalid or not available.
 ### ✅ Solution
 
 1. **Check max file size limit**:
+
    ```javascript
    // In server.js
    const MAX_FILE_SIZE = 50 * 1024 * 1024 * 1024; // 50GB
@@ -382,6 +416,7 @@ HOST address is invalid or not available.
    ```
 
 2. **Check available disk space**:
+
    ```bash
    df -h
    # Need at least 2x file size (for temp storage)
@@ -393,6 +428,7 @@ HOST address is invalid or not available.
    - Reduce chunk size for stability
 
 4. **Monitor memory usage**:
+
    ```bash
    # Check if server runs out of memory
    htop
@@ -409,12 +445,14 @@ HOST address is invalid or not available.
 ### ✅ Solution
 
 1. **Check VPN is connected**:
+
    ```bash
    ping YOUR_VPN_IP
    # Example: ping 10.8.0.1
    ```
 
 2. **Check firewall**:
+
    ```bash
    # Linux
    sudo ufw status
@@ -425,12 +463,14 @@ HOST address is invalid or not available.
    ```
 
 3. **Check HOST and PORT**:
+
    ```bash
    # Verify .env file
    cat .env | grep -E "^HOST|^PORT"
    ```
 
 4. **Test with curl**:
+
    ```bash
    curl http://YOUR_VPN_IP:PORT
    # Should return HTML content
@@ -570,17 +610,23 @@ What actually happens (error messages, etc.)
 ## Logs
 ### Server Logs
 ```
+
 Paste server logs here
+
 ```
 
 ### Browser Console
 ```
+
 Paste browser console logs here
+
 ```
 
 ### Network Tab
 ```
+
 Relevant request/response headers from Network tab
+
 ```
 ```
 

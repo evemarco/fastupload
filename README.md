@@ -15,9 +15,11 @@ A web-based file upload system optimized for large files (up to 50GB) with chunk
 ## Technology Stack
 
 ### Package Manager
+
 - **pnpm** - Fast, disk space efficient package manager
 
 ### Backend
+
 - **Node.js** (>=20.0.0) + **Express** (5.2.1) - Web server
 - **@tus/server** (2.3.0) - TUS protocol server implementation
 - **@tus/file-store** (2.0.0) - File storage with chunking support
@@ -25,6 +27,7 @@ A web-based file upload system optimized for large files (up to 50GB) with chunk
 - **dotenv** (17.2.3) - Environment variable management
 
 ### Frontend
+
 - **Vanilla JavaScript** - Lightweight, no framework dependencies
 - **tus-js-client** (3.1.3) - Client-side TUS protocol implementation
 - **Drag & Drop API** - Intuitive file selection
@@ -32,6 +35,7 @@ A web-based file upload system optimized for large files (up to 50GB) with chunk
 ## Package Versions
 
 All packages are using the latest stable versions as of January 2026:
+
 - `express@5.2.1` - Latest stable Express release
 - `@tus/server@2.3.0` - Latest TUS server
 - `@tus/file-store@2.0.0` - Latest file store
@@ -95,11 +99,13 @@ The server will start at `http://localhost:3000` by default.
 ### Accessing the Server
 
 **Default (HOST=0.0.0.0)**:
+
 - Local: `http://localhost:3000`
 - Local Network: `http://YOUR_LOCAL_IP:3000` (e.g., `http://192.168.1.100:3000`)
 - VPN: `http://YOUR_VPN_IP:3000` (e.g., `http://10.8.0.1:3000`)
 
 **Custom HOST**:
+
 - If you set `HOST=10.8.0.1`, access at: `http://10.8.0.1:3000`
 - Perfect for VPN access without reverse proxy!
 
@@ -118,6 +124,7 @@ The server will start at `http://localhost:3000` by default.
 ### Resume Interrupted Uploads
 
 If an upload is interrupted:
+
 1. The upload will be automatically paused
 2. Click "Resume" to continue from where it stopped
 3. The system will detect the already-uploaded chunks and skip them
@@ -153,6 +160,7 @@ nano .env
 ```
 
 **Example .env file**:
+
 ```bash
 # Server host (0.0.0.0 = all interfaces, perfect for VPN)
 HOST=0.0.0.0
@@ -162,6 +170,7 @@ PORT=3000
 ```
 
 **HOST Options**:
+
 - `0.0.0.0` - Listen on all interfaces (localhost, local network, VPN)
 - `127.0.0.1` - Localhost only
 - `10.8.0.1` - Specific VPN IP
@@ -174,6 +183,7 @@ const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB chunks
 ```
 
 Recommended chunk sizes based on network:
+
 - Slow/Unstable: 10-25MB
 - Standard Broadband: 50MB (default)
 - Fast/Stable: 100-200MB
@@ -220,6 +230,7 @@ Recommended chunk sizes based on network:
 ## File Storage
 
 Uploaded files are stored in the `uploads/` directory:
+
 ```
 uploads/
 ├── 1737824567890-myfile.txt    # Uploaded files
@@ -232,21 +243,25 @@ Each file is named with: `{timestamp}-{original-filename}.{extension}`
 ## Troubleshooting
 
 ### Upload Fails Immediately
+
 - Check server logs for errors
 - Verify `uploads/` directory is writable
 - Ensure sufficient disk space
 
 ### Slow Upload Speed
+
 - Reduce chunk size in `public/index.html`
 - Check network stability
 - Try smaller test files first
 
 ### Resume Not Working
+
 - Ensure the upload ID is still available on server
 - Check that the file hasn't been modified
 - Server timeout may have removed partial uploads
 
 ### Browser Issues
+
 - Use modern browser (Chrome, Firefox, Edge, Safari)
 - Disable browser extensions that block uploads
 - Check browser console for errors

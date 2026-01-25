@@ -35,6 +35,7 @@ sudo nano /etc/nginx/sites-available/fastupload
 ```
 
 Update this line:
+
 ```nginx
 server_name your-domain.com www.your-domain.com;
 ```
@@ -57,6 +58,7 @@ sudo systemctl reload nginx
 ### 5. Access Your Server
 
 Visit your domain:
+
 ```
 http://your-domain.com
 ```
@@ -81,6 +83,7 @@ sudo certbot --nginx -d your-domain.com -d www.your-domain.com
 ```
 
 Certbot will automatically:
+
 - Obtain SSL certificate
 - Update Nginx configuration
 - Redirect HTTP to HTTPS

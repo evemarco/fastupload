@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-01-25
 
 ### Added
+
 - Initial release of FastUpload
 - Chunked file upload support (50MB chunks by default)
 - Resume capability for interrupted uploads
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for files up to 50GB
 
 ### Dependencies
+
 - `express@5.2.1` - Latest stable Express web framework
 - `@tus/server@2.3.0` - Latest TUS server implementation
 - `@tus/file-store@2.0.0` - Latest file storage with chunking
@@ -27,12 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pnpm@10.28.0` - Fast, disk-space efficient package manager
 
 ### Package Management
+
 - Migrated from npm to pnpm
 - Added `preinstall` hook to enforce pnpm usage
 - Using ES modules (`type: "module"` in package.json)
 - All packages are at latest stable versions as of January 2026
 
 ### Documentation
+
 - README.md - Comprehensive documentation
 - QUICKSTART.md - Quick start guide
 - CONTRIBUTING.md - Development guide
@@ -53,19 +57,25 @@ Given a version number MAJOR.MINOR.PATCH, increment the:
 ## Categories
 
 ### Added
+
 New features and functionality
 
 ### Changed
+
 Changes to existing functionality
 
 ### Deprecated
+
 Features that will be removed in future releases
 
 ### Removed
+
 Features removed in this version
 
 ### Fixed
+
 Bug fixes
 
 ### Security
+
 Security-related changes

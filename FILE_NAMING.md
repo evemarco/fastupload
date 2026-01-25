@@ -15,6 +15,7 @@ original-name-timestamp.extension
 ### Example
 
 If you upload `my-document.pdf`:
+
 ```
 uploads/
 ├── my-document-1706159234567.pdf
@@ -24,6 +25,7 @@ uploads/
 ### Why the Timestamp?
 
 The timestamp (`1706159234567`) is added to:
+
 - ✅ Prevent file overwrites if you upload multiple files with the same name
 - ✅ Keep track of when the file was uploaded
 - ✅ Ensure unique filenames for all uploads
@@ -38,6 +40,7 @@ Softbiz-Proposal-2009-1769338476465.pdf.json  ← Metadata
 ```
 
 The `.json` file contains:
+
 ```json
 {
   "id": "afc1e059fb8e0e42d297ced81117c5c4",
@@ -54,6 +57,7 @@ The `.json` file contains:
 ## Automatic Cleanup
 
 The server automatically cleans up:
+
 - **Empty files** (failed uploads)
 - **Orphaned metadata files** (`.json` files without corresponding files)
 
@@ -104,6 +108,7 @@ Both files are kept with different timestamps.
 ### File Extension Issues
 
 If the file extension is missing or wrong:
+
 - The server uses the extension from the original filename
 - If the browser doesn't provide it, the file might have no extension
 
@@ -146,6 +151,7 @@ find uploads/ -type f -mtime +30 -delete
 ### File Upload Validation
 
 Currently, FastUpload accepts any file type. For production, consider adding:
+
 - File type validation (only allow PDF, images, etc.)
 - Virus scanning
 - File size limits per user
@@ -154,6 +160,7 @@ Currently, FastUpload accepts any file type. For production, consider adding:
 ### Sensitive Information
 
 Be careful when uploading files with sensitive information:
+
 - Use HTTPS in production
 - Secure the uploads directory with proper permissions
 - Consider encryption at rest

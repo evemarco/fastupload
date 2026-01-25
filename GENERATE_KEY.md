@@ -59,11 +59,13 @@ Generated key (32 characters):
 After generating a new key:
 
 1. **Restart server**:
+
    ```bash
    pnpm start
    ```
 
 2. **Test authentication**:
+
    ```bash
    # Via URL
    http://localhost:3003/?key=a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
@@ -74,6 +76,7 @@ After generating a new key:
    ```
 
 3. **Share with users** (if needed):
+
    ```
    Access Key: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
    URL: http://your-server:3003/?key=a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6

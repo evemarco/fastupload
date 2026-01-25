@@ -8,6 +8,10 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "generate-key": "node scripts/generate-key.js",
+    "lint": "eslint server.js scripts/generate-key.js",
+    "lint:fix": "eslint server.js scripts/generate-key.js --fix",
+    "lint:html": "npx htmlhint public/index.html",
+    "lint:md": "npx markdownlint *.md --fix",
     "preinstall": "npx only-allow pnpm"
   },
   "keywords": [
@@ -32,6 +36,12 @@
     "express": "^5.2.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.1.0",
+    "htmlhint": "^1.8.0",
+    "markdownlint-cli": "^0.47.0",
     "only-allow": "^1.2.1"
   }
 }

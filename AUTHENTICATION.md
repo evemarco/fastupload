@@ -67,12 +67,14 @@ http://YOUR_HOST:PORT?key=my-secret-access-key-123
 ```
 
 **Benefits**:
+
 - One-time URL
 - Can be shared (e.g., via email)
 - Automatically sets cookie
 - Can bookmark authenticated URL
 
 **Security Note**:
+
 - URL with key is visible in browser history
 - URL with key can be copied/shared
 - Consider using login form for better security
@@ -93,6 +95,7 @@ Server is accessible without authentication.
 ### Using Cookie
 
 1. First, login via `/api/login`:
+
    ```bash
    curl -X POST http://YOUR_HOST:PORT/api/login \\
      -H "Content-Type: application/json" \\
@@ -101,6 +104,7 @@ Server is accessible without authentication.
    ```
 
 2. Use cookie in subsequent requests:
+
    ```bash
    curl http://YOUR_HOST:PORT/api/uploads \\
      -b cookies.txt
@@ -191,6 +195,7 @@ pnpm start
 **Symptoms**: 404 or error when visiting `/login`
 
 **Solution**:
+
 1. Check server is running
 2. Verify `/login` route exists in `server.js`
 3. Check port and host are correct
@@ -202,24 +207,28 @@ pnpm start
 **Solutions**:
 
 1. **Check access key in .env**:
+
    ```bash
    cat .env | grep ACCESS_KEY
    # Should show: ACCESS_KEY=my-secret-key
    ```
 
 2. **Verify key matches exactly** (case-sensitive):
+
    ```
    Wrong: my-secret-key
    Correct: My-Secret-Key-123
    ```
 
 3. **Check for extra spaces**:
+
    ```bash
    # Bad: ACCESS_KEY= my-key (space after =)
    # Good: ACCESS_KEY=my-key
    ```
 
 4. **Restart server** after changing `.env`:
+
    ```bash
    # Stop server (Ctrl+C)
    pnpm start
@@ -237,6 +246,7 @@ pnpm start
    - Incognito mode might block cookies
 
 2. **Check cookie configuration**:
+
    ```javascript
    // In server.js
    res.cookie('fastupload_session', sessionKey, {
@@ -248,6 +258,7 @@ pnpm start
    ```
 
 3. **Use URL parameter instead**:
+
    ```
    http://YOUR_HOST:PORT?key=YOUR_ACCESS_KEY
    ```
@@ -259,6 +270,7 @@ pnpm start
 **Solutions**:
 
 1. **Ensure authentication is enabled**:
+
    ```bash
    # Check .env
    cat .env | grep ACCESS_KEY
@@ -267,6 +279,7 @@ pnpm start
    ```
 
 2. **Check cookie is set**:
+
    ```javascript
    // In browser console
    document.cookie
@@ -274,11 +287,13 @@ pnpm start
    ```
 
 3. **Use query parameter**:
+
    ```bash
    curl "http://YOUR_HOST:PORT/api/uploads?key=YOUR_ACCESS_KEY"
    ```
 
 4. **Login first**:
+
    ```bash
    # Login
    curl -X POST http://YOUR_HOST:PORT/api/login \\
@@ -300,9 +315,11 @@ pnpm start
 
 1. **Re-login after restart** (current behavior)
 2. **Use URL parameter** (bypasses session):
+
    ```
    http://YOUR_HOST:PORT?key=YOUR_ACCESS_KEY
    ```
+
 3. **Implement persistent sessions** (advanced):
    - Use Redis or database for session storage
    - Configure session expiration
