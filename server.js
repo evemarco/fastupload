@@ -5,6 +5,8 @@ import { FileStore } from '@tus/file-store';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const HOST = process.env.HOST || '0.0.0.0';
@@ -14,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 const MAX_FILE_SIZE_GB = parseInt(process.env.MAX_FILE_SIZE_GB || '50');
 const MAX_FILE_SIZE = MAX_FILE_SIZE_GB * 1024 * 1024 * 1024;
+const ACCESS_KEY = process.env.ACCESS_KEY || '';
 
 // Clean up empty files and orphaned metadata on startup
 function cleanupUploads() {
@@ -78,7 +81,238 @@ app.use(cors({
   exposedHeaders: ['Upload-Offset', 'Tus-Version', 'Tus-Resumable', 'Upload-Length', 'Location'],
   credentials: false,
 }));
+
+// Authentication middleware
+const sessionStore = new Map(); // Store session keys in memory
+
+function isAuthenticated(req) {
+  // If no access key is set, allow all access
+  if (!ACCESS_KEY) {
+    return true;
+  }
+
+  // Check for cookie
+  const sessionCookie = req.cookies?.fastupload_session;
+  if (sessionCookie && sessionStore.has(sessionCookie)) {
+    return sessionStore.get(sessionCookie) === ACCESS_KEY;
+  }
+
+  // Check for query parameter
+  const key = req.query.key;
+  if (key && key === ACCESS_KEY) {
+    return true;
+  }
+
+  return false;
+}
+
+function generateSessionKey() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// Parse cookies before authentication middleware
+app.use(cookieParser());
+
+// Authentication check middleware
+app.use(express.json());
+app.use((req, res, next) => {
+  // Skip authentication check for login page
+  if (req.path === '/login' || (req.path === '/api/login' && req.method === 'POST')) {
+    return next();
+  }
+
+  // If no access key is configured, allow all requests
+  if (!ACCESS_KEY) {
+    return next();
+  }
+
+  // Check if user is authenticated
+  if (isAuthenticated(req)) {
+    // If authenticated via query parameter, set cookie for future requests
+    const key = req.query.key;
+    if (key && key === ACCESS_KEY && !req.cookies?.fastupload_session) {
+      const sessionKey = generateSessionKey();
+      sessionStore.set(sessionKey, key);
+      res.cookie('fastupload_session', sessionKey, {
+        httpOnly: true,
+        secure: false, // Set to true if using HTTPS
+        sameSite: 'lax',
+        maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+      });
+    }
+    return next();
+  }
+
+  // User is not authenticated
+  if (req.path.startsWith('/api/')) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'Access key required' });
+  }
+
+  // Redirect to login page for web requests
+  return res.redirect('/login');
+});
+
 app.use(express.static('public'));
+
+// Login routes
+app.get('/login', (req, res) => {
+  // If already authenticated, redirect to home
+  if (isAuthenticated(req)) {
+    return res.redirect('/');
+  }
+
+  // Show login page
+  res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - FastUpload</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 20px;
+    }
+    .login-container {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 100%;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    input[type="password"] {
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    input[type="password"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .btn {
+      padding: 14px 20px;
+      border: none;
+      border-radius: 6px;
+      background: #667eea;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .btn:hover {
+      background: #5568d3;
+    }
+    .error {
+      background: #ffebee;
+      color: #d32f2f;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    .info {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>🔐 Login</h1>
+    <p class="subtitle">Enter access key to continue</p>
+
+    ${req.query.error ? '<div class="error">' + req.query.error + '</div>' : ''}
+
+    <form method="POST" action="/api/login">
+      <div class="form-group">
+        <label for="key">Access Key</label>
+        <input
+          type="password"
+          id="key"
+          name="key"
+          placeholder="Enter your access key"
+          required
+          autofocus
+        >
+      </div>
+      <button type="submit" class="btn">Login</button>
+    </form>
+
+    <div class="info" style="margin-top: 20px;">
+      <strong>💡 Tip:</strong> Access key can be set via URL parameter:<br>
+      <code>?key=YOUR_ACCESS_KEY</code>
+    </div>
+  </div>
+</body>
+</html>
+  `);
+});
+
+app.post('/api/login', (req, res) => {
+  const { key } = req.body;
+
+  if (!key) {
+    return res.redirect('/login?error=Access+key+is+required');
+  }
+
+  if (key !== ACCESS_KEY) {
+    return res.redirect('/login?error=Invalid+access+key');
+  }
+
+  // Generate session key
+  const sessionKey = generateSessionKey();
+  sessionStore.set(sessionKey, key);
+
+  // Set cookie and redirect
+  res.cookie('fastupload_session', sessionKey, {
+    httpOnly: true,
+    secure: false, // Set to true if using HTTPS
+    sameSite: 'lax',
+    maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+  });
+
+  res.redirect('/');
+});
 
 // Helper function to get filename from metadata
 function getFilenameFromUpload(uploadId) {
