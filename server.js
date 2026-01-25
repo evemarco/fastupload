@@ -205,24 +205,41 @@ app.get('/api/uploads/partial', (req, res) => {
           }
         }
 
+        // Get original filename from metadata
+        const originalName = metadata?.metadata?.filename || filename;
+
+        // Determine total size
+        const totalSize = metadata?.size || 0;
+
+        // If offset is 0 but file has data, use file size as offset
+        // This handles the case where metadata is not updated correctly
+        let offset = metadata?.offset || 0;
+        if (offset === 0 && stats.size > 0 && totalSize > 0) {
+          offset = stats.size;
+          console.log(`Correcting offset for ${filename}: ${offset} bytes (was 0)`);
+        }
+
         // Check if file is empty (in progress) or has data (partial)
         const isInProgress = stats.size === 0;
-        const isPartial = stats.size > 0 && (!metadata || metadata.offset < metadata.size);
+        const isPartial = stats.size > 0 && stats.size < totalSize;
+        const isCompleted = stats.size > 0 && stats.size >= totalSize;
 
+        // Only return incomplete uploads
         if (isInProgress || isPartial) {
-          const originalName = metadata?.metadata?.filename || filename;
-          const totalSize = metadata?.size || 0;
+          const progress = totalSize > 0 ? ((stats.size / totalSize) * 100).toFixed(2) : 0;
 
           return {
             id: filename,
             name: originalName,
             size: stats.size,
             totalSize: totalSize,
-            progress: totalSize > 0 ? ((stats.size / totalSize) * 100).toFixed(2) : 0,
+            progress: progress,
+            offset: offset,
             modified: stats.mtime,
             creationDate: metadata?.creation_date || stats.mtime,
             status: isInProgress ? 'in_progress' : 'paused',
-            metadata: metadata
+            metadata: metadata,
+            hasData: stats.size > 0
           };
         }
 
@@ -230,6 +247,7 @@ app.get('/api/uploads/partial', (req, res) => {
       })
       .filter(upload => upload !== null); // Filter out null entries
 
+    console.log(`Found ${partialUploads.length} partial uploads`);
     res.json(partialUploads);
   } catch (error) {
     console.error('Error listing partial uploads:', error.message);

@@ -268,9 +268,9 @@
       });
     }
 
-    function startUpload(file) {
-      const uploadId = `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+    function startUpload(file, existingUploadId = null) {
+      const uploadId = existingUploadId || `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
       const uploadItem = createUploadItem(uploadId, file);
       uploadList.appendChild(uploadItem);
 
@@ -514,7 +514,24 @@
     // Create UI item for partial upload
     function createPartialUploadItem(partial) {
       const uploadId = `partial-${partial.id}`;
-      const displayHost = window.location.host;
+
+      // Calculate progress bar width
+      const progressWidth = Math.min(100, Math.max(0, parseFloat(partial.progress)));
+
+      // Create status message
+      let statusMessage = '';
+      let statusClass = 'paused';
+
+      if (partial.status === 'in_progress') {
+        statusMessage = 'Upload was in progress';
+        statusClass = 'in_progress';
+      } else if (partial.hasData) {
+        statusMessage = 'Upload was paused (can resume)';
+        statusClass = 'paused';
+      } else {
+        statusMessage = 'Upload was interrupted';
+        statusClass = 'error';
+      }
 
       const div = document.createElement('div');
       div.className = 'upload-item';
@@ -522,12 +539,12 @@
       div.innerHTML = `
         <h3>${partial.name}</h3>
         <div class="file-info">
-          <span>Size: ${formatSize(partial.totalSize)} (uploaded: ${formatSize(partial.size)})</span>
-          <span class="status ${partial.status}">${partial.status === 'in_progress' ? 'In Progress' : 'Paused'}</span>
+          <span>Uploaded: ${formatSize(partial.size)} / ${formatSize(partial.totalSize)}</span>
+          <span class="status ${statusClass}">${partial.status === 'in_progress' ? 'In Progress' : 'Paused'}</span>
         </div>
         <div class="progress-container">
           <div class="progress-bar">
-            <div class="progress-fill" style="width: ${partial.progress}%"></div>
+            <div class="progress-fill" style="width: ${progressWidth}%"></div>
           </div>
           <div class="progress-text">
             <span class="percentage">${partial.progress}%</span>
@@ -535,13 +552,23 @@
           </div>
         </div>
         <div class="chunk-info">
-          ${partial.status === 'in_progress' ? 'Upload was in progress' : 'Upload was paused'}
+          ${statusMessage}
         </div>
-        <div class="progress-text" style="margin-top: 10px;">
-          <span class="info"></span>
-        </div>
+        ${partial.hasData ? `
+          <div class="info" style="margin-top: 8px; padding: 8px; background: #fff3e0; border-radius: 4px; border-left: 3px solid #ff9800;">
+            <strong>💡 How to resume:</strong><br>
+            1. Click "Resume" button below<br>
+            2. Select the original file from your computer<br>
+            3. Upload will continue from ${partial.progress}% (${formatSize(partial.size)})
+          </div>
+        ` : `
+          <div class="info" style="margin-top: 8px; padding: 8px; background: #ffebee; border-radius: 4px; border-left: 3px solid #f44336;">
+            <strong>⚠️ Upload interrupted (0 bytes uploaded)</strong><br>
+            No data on server. Start fresh upload when ready.
+          </div>
+        `}
         <div class="actions">
-          <button class="btn btn-warning" onclick="resumePartialUpload('${partial.id}', '${partial.name}')">
+          <button class="btn btn-warning" onclick="resumePartialUpload('${partial.id}', '${partial.name}')" ${!partial.hasData ? 'disabled' : ''}>
             🔄 Resume
           </button>
           <button class="btn btn-danger" onclick="deletePartialUpload('${partial.id}', '${uploadId}')">
