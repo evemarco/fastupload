@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import { Server, EVENTS } from '@tus/server';
 import { FileStore } from '@tus/file-store';
@@ -6,6 +7,7 @@ import path from 'path';
 import fs from 'fs';
 
 const app = express();
+const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 3000;
 
 // Configuration
@@ -96,11 +98,19 @@ app.get('/api/uploads/:id/status', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
+  const displayHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
   console.log(`\n=== FastUpload Server ===`);
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://${displayHost}:${PORT}`);
   console.log(`Upload directory: ${UPLOAD_DIR}`);
   console.log(`Max file size: ${MAX_FILE_SIZE / (1024 * 1024 * 1024)} GB`);
-  console.log(`TUS endpoint: http://localhost:${PORT}/upload`);
+  console.log(`TUS endpoint: http://${displayHost}:${PORT}/upload`);
+  
+  if (HOST === '0.0.0.0') {
+    console.log(`\n💡 Accessible via:`);
+    console.log(`   - Local: http://localhost:${PORT}`);
+    console.log(`   - Network: http://YOUR_LOCAL_IP:${PORT}`);
+    console.log(`   - VPN: http://YOUR_VPN_IP:${PORT}`);
+  }
   console.log(`========================\n`);
 });

@@ -24,18 +24,61 @@ pnpm install
 ## 2. Start the Server
 
 ```bash
-# Start server
+# Start server (default: 0.0.0.0:3000)
 pnpm start
 
 # Or with auto-restart on file changes
 pnpm run dev
+
+# Use custom port
+PORT=8080 pnpm start
+
+# Use VPN IP (no reverse proxy needed!)
+HOST=10.8.0.1 pnpm start
+
+# Both custom port and host
+HOST=10.8.0.1 PORT=8080 pnpm start
 ```
 
-The server will start at `http://localhost:3000`
+The server will show available access URLs:
+
+**Default (HOST=0.0.0.0)**:
+```
+=== FastUpload Server ===
+Server running on http://localhost:3000
+Upload directory: /data/fastupload/uploads
+Max file size: 50 GB
+TUS endpoint: http://localhost:3000/upload
+
+💡 Accessible via:
+   - Local: http://localhost:3000
+   - Network: http://YOUR_LOCAL_IP:3000
+   - VPN: http://YOUR_VPN_IP:3000
+```
+
+**With VPN IP (HOST=10.8.0.1)**:
+```
+=== FastUpload Server ===
+Server running on http://10.8.0.1:3000
+Upload directory: /data/fastupload/uploads
+Max file size: 50 GB
+TUS endpoint: http://10.8.0.1:3000/upload
+```
 
 ## 3. Open Your Browser
 
+### Local Access
 Navigate to `http://localhost:3000` in your browser.
+
+### VPN Access (No Reverse Proxy Needed!)
+1. Set your VPN IP as HOST: `HOST=10.8.0.1 pnpm start`
+2. Access directly from VPN: `http://10.8.0.1:3000`
+3. No nginx, Apache, or other reverse proxy required!
+
+### Local Network Access
+1. Default server listens on all interfaces (0.0.0.0)
+2. Find your local IP: `hostname -I` or `ipconfig`
+3. Access: `http://YOUR_LOCAL_IP:3000` (e.g., `http://192.168.1.100:3000`)
 
 ## 4. Upload Files
 

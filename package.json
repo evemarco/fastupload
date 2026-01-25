@@ -26,6 +26,7 @@
     "@tus/file-store": "^2.0.0",
     "@tus/server": "^2.3.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
     "express": "^5.2.1"
   },
   "devDependencies": {
