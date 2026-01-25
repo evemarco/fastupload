@@ -324,6 +324,8 @@ Contributions are welcome! Feel free to submit issues and pull requests.
 - **[VPN & Network Configuration](./VPN_GUIDE.md)** - How to configure FastUpload for VPN access without reverse proxy
 - **[Resume & Persistence Guide](./RESUME_GUIDE.md)** - How interrupted uploads are remembered and resumed
 - **[Authentication Guide](./AUTHENTICATION.md)** - How to protect access with access key authentication
+- **[Nginx Configuration Guide](./NGINX_GUIDE.md)** - How to configure Nginx reverse proxy for FastUpload
+- **[Nginx Setup](./NGINX.md)** - Quick start for Nginx deployment
 - **[File Naming & Storage](./FILE_NAMING.md)** - How files are stored and named
 - **[Troubleshooting Guide](./TROUBLESHOOTING.md)** - Solutions to common issues and errors
 - **[Quick Start Guide](./QUICKSTART.md)** - Quick start instructions
