@@ -1,372 +1,483 @@
-# Guide Complet du Protocole TUS
-## (TUS - Resumable Upload Protocol) Expliqué Simplement
+# TUS Protocol Guide
+
+## Overview
+
+This guide explains the **TUS protocol** (The Upload Standard) in simple terms, focusing on why it's essential for large file uploads.
 
 ---
 
-## 📚 Table des Matières
+## Table of Contents
 
-1. [C'est quoi TUS ?](#quest-ce-que-le-protocole-tus)
-2. [Pourquoi c'est génial pour les gros fichiers ?](#pourquoi-cest-génial-pour-les-gros-fichiers)
-3. [Comment ça marche ?](#comment-ça-marche)
-4. [Analogie avec le déménagement](#analogie-avec-le-déménagement)
-5. [Les problèmes que TUS résout](#les-problèmes-que-tus-résout)
-6. [Comparaison TUS vs Upload classique](#tus-vs-upload-classique)
-7. [Dans votre projet FastUpload](#dans-votre-projet-fastupload)
-8. [Foire aux questions](#foire-aux-questions)
+1. [What is TUS?](#what-is-tus)
+2. [Why is it Great for Large Files?](#why-is-it-great-for-large-files)
+3. [How Does it Work?](#how-does-it-work)
+4. [Moving Analogy](#moving-analogy)
+5. [Problems that TUS Solves](#problems-that-tus-solves)
+6. [TUS vs Traditional Upload](#tus-vs-traditional-upload)
+7. [In Your FastUpload Project](#in-your-fastupload-project)
+8. [FAQ](#faq)
 
 ---
 
-## 🎯 C'est quoi le Protocole TUS ?
+## 🎯 What is the TUS Protocol?
 
 **TUS** = **T**he **U**pload **S**tandard
 
-C'est une façon standardisée de transférer des fichiers entre un ordinateur (votre navigateur) et un serveur. C'est comme un langage commun que les deux comprennent pour s'assurer que le transfert se fait correctement.
+It's a standardized way to transfer files between a computer (your browser) and a server. It's like a common language that both understand to ensure the transfer is done correctly.
 
-### Points clés :
-- ✅ **Standard ouvert** : Gratuit et accessible à tous
-- ✅ **Reprise automatique** : Si ça coupe, ça reprend là où ça s'est arrêté
-- ✅ **Compatible** : Fonctionne partout (Chrome, Firefox, Safari, mobiles...)
-- ✅ **Sécurisé** : Pas de fichiers corrompus
-- ✅ **Fiable** : Idéal pour les connexions internet instables
+### Key Points:
+- ✅ **Open Standard** - Free and accessible to everyone
+- ✅ **Automatic Resume** - If it cuts off, it resumes where it stopped
+- ✅ **Compatible** - Works everywhere (Chrome, Firefox, Safari, mobile...)
+- ✅ **Secure** - No corrupted files
+- ✅ **Reliable** - Perfect for unstable internet connections
 
----
+## 🚀 Why is it Great for Large Files?
 
-## 🚀 Pourquoi c'est génial pour les gros fichiers ?
+Imagine you need to send a **50 GB file** (size of 50 full movies or 10,000 photos).
 
-Imaginez que vous devez envoyer un fichier de **50 Go** (la taille de 50 films complets ou 10,000 photos).
+### Without TUS (traditional method):
 
-### Sans TUS (méthode classique) :
+50 GB file → Upload in one block → ❌ Problem if it cuts off at 99%
 
-```
-Fichier 50 Go → Upload en un seul bloc → ❌ Problème si ça coupe à 99%
-```
+**Result**: You must **restart from the beginning**! 😢
 
-**Résultat** : Vous devez **tout recommencer depuis le début** ! 😢
+### With TUS:
 
-### Avec TUS :
+50 GB file → Divided into 1,000 pieces → Upload piece by piece
 
-```
-Fichier 50 Go → Divisé en 1,000 morceaux → Upload morceau par morceau
-```
+**If it cuts off at 99%**:
+- ✅ You already have 990 pieces sent
+- ✅ You have 10 pieces left
+- ✅ **You resume at 99%, not 0%**! 🎉
 
-**Si ça coupe à 99%** :
-- ✅ Vous avez déjà 990 morceaux envoyés
-- ✅ Il ne reste que 10 morceaux
-- ✅ Vous continuez là où ça s'est arrêté
-- ✅ Rien à refaire !
+**Time saved**: Instead of re-uploading 50 GB, you upload only 0.5 GB (10 pieces)!
 
----
+## 🔄 How Does it Work?
 
-## ⚙️ Comment ça marche ?
+### The Conversation Between Browser and Server
 
-### Étape 1 : Découpage (Chunking)
-
-Imaginez un livre de 1,000 pages. TUS le découpe en morceaux de 50 pages :
+The browser and server "talk":
 
 ```
-📚 Livre (50 Go)
-├── Morceau 1 : pages 1-50
-├── Morceau 2 : pages 51-100
-├── Morceau 3 : pages 101-150
-...
-└── Morceau 1,000 : pages 951-1,000
+Browser: "Hello, I want to upload this 50 GB file"
+Server: "OK, I'll create an upload with ID abc123"
+Browser: "Sending first piece (1-50 MB)"
+Server: "Received, offset: 50 MB"
+Browser: "Sending second piece (51-100 MB)"
+Server: "Received, offset: 100 MB"
+... (continues until 50 GB)
+Server: "All pieces received! Upload complete!"
 ```
 
-Dans FastUpload, chaque morceau fait **50 Mo**.
+### Key Concept: **Offset**
 
-### Étape 2 : Communication
+The **offset** is the position where the upload is:
+- **Offset: 0** → 0 bytes uploaded (start)
+- **Offset: 100 MB** → 100 MB uploaded (20%)
+- **Offset: 50 GB** → 50 GB uploaded (100%)
 
-Le navigateur et le serveur se "parlent" :
+When you resume an upload:
+1. Server checks offset (e.g., 30 GB)
+2. Browser uploads from offset (30 GB to 50 GB)
+3. Only the remaining 20 GB is uploaded!
 
-```
-Navigateur : "Bonjour, je veux envoyer ce fichier de 50 Go"
-Serveur    : "OK, créeons un upload. Voici l'ID : abc123"
-Navigateur : "J'envoie le morceau 1 (50 Mo)"
-Serveur    : "Reçu. J'en ai 50 Mo sur 50 Go. Continue"
-Navigateur : "J'envoie le morceau 2 (50 Mo)"
-Serveur    : "Reçu. J'en ai 100 Mo sur 50 Go. Continue"
-...
-```
+## 📦 Moving Analogy
 
-### Étape 3 : Si ça coupe
+Imagine you're moving from one house to another.
 
-```
-Imaginez : Le wifi coupe au morceau 800
+### Without TUS (One Trip)
 
-Navigateur (reconnexion) : "Bonjour, c'est toujours l'upload abc123"
-Serveur                      : "Salut ! J'ai déjà 780 morceaux (39 Go)"
-Navigateur                  : "Parfait, je continue au morceau 781"
-Serveur                      : "Super, continue comme ça"
-```
+- Load entire house into **one giant truck**
+- Drive to new house
+- If the truck breaks down halfway...
+- **You restart from the beginning**! 😢
 
-**Résultat** : Vous ne reprenez que les morceaux manquants, pas tout le fichier !
+### With TUS (Multiple Trips)
 
-### Étape 4 : Reconstruction
+- Load house into **100 small boxes**
+- Drive each box separately
+- If the truck breaks down after 60 boxes...
+- ✅ You still have 60 boxes at new house
+- ✅ Only 40 boxes left to move
+- ✅ **You resume from box 61, not 1**! 🎉
 
-Une fois tous les morceaux arrivés, le serveur les réassemble :
+**Result**: Instead of moving entire house again, you only move the remaining boxes.
 
-```
-Morceau 1 + Morceau 2 + ... + Morceau 1,000
-        ↓
-    📚 Fichier complet (50 Go)
-```
+## 🎯 Problems that TUS Solves
 
----
+### Problem 1: Unstable Internet
 
-## 🏠 Analogie avec le déménagement
+**Without TUS**:
+- Upload starts at 0%
+- Internet cuts at 95%
+- You restart at **0%**! 😢
 
-Imaginez que vous déménagez d'une maison à une autre.
+**With TUS**:
+- Upload starts at 0%
+- Internet cuts at 95%
+- You resume at **95%**! 🎉
 
-### ❌ Upload classique (sans TUS)
+### Problem 2: Network Timeout
 
-Vous avez **1,000 cartons** à déplacer. Vous essayez de tout porter **en une seule fois** :
+**Without TUS**:
+- Large file takes 2 hours to upload
+- Server timeout after 1 hour
+- Upload fails, restart at **0%**!
 
-```
-Vous essayez de porter 1,000 cartons en même temps...
-⚠️ C'est impossible, vous tombez et tous les cartons s'écroulent
-😢 Vous devez tout recommencer depuis le début
-```
+**With TUS**:
+- Large file divided into small pieces
+- Each piece takes 10 seconds
+- Server timeout: 1 hour (3600 seconds)
+- 360 pieces per hour → No timeout!
+- Upload continues smoothly.
 
-### ✅ TUS (protocole intelligent)
+### Problem 3: Full Upload Corrupted
 
-Vous transportez les cartons **un par un** ou **par dizaines** :
+**Without TUS**:
+- 50 GB file uploaded in one piece
+- One byte corrupted during transfer
+- Entire file corrupted!
+- Restart from **0%**!
 
-```
-Carton 1 ✓ → Carton 2 ✓ → Carton 3 ✓ → ... → Carton 500
-                    ⚠️ Il pleut, vous arrêtez
+**With TUS**:
+- 50 GB file divided into 1,000 pieces
+- One piece corrupted during transfer
+- Only that one piece is corrupted!
+- Server detects corrupted piece
+- Browser re-uploads **only that one piece**!
+- All other pieces remain intact.
 
-Reprise après la pluie :
-"J'ai déjà 500 cartons déplacés, je continue au 501"
-Carton 501 ✓ → Carton 502 ✓ → ... → Carton 1,000 ✓
+## 📊 TUS vs Traditional Upload
 
-🎉 Tous les cartons sont déplacés !
-```
+| Aspect | Traditional Upload | TUS Upload |
+|---------|-------------------|-------------|
+| **File Division** | One piece | Multiple pieces |
+| **Resume Capability** | ❌ No | ✅ Yes |
+| **Upload Interruption** | Restart from 0% | Resume from where stopped |
+| **Corrupted Piece** | Entire file corrupted | Only piece corrupted |
+| **Network Timeout** | Fails on large files | No timeout (small pieces) |
+| **Memory Usage** | Full file in RAM | Streaming (low RAM) |
+| **Progress Tracking** | Difficult | Easy (offset tracking) |
 
-**Avantages** :
-- Si ça coupe, vous ne perdez pas ce qui est déjà fait
-- Vous pouvez faire des pauses
-- Si un carton tombe, vous ne reprenez que celui-là
+### Real Example: 50 GB File
 
----
+**Without TUS**:
+- 50 GB uploaded in one piece
+- If it cuts off at 99%...
+- **You restart from 0%** (50 GB to upload again!)
 
-## 🐛 Les problèmes que TUS résout
+**With TUS**:
+- 50 GB divided into 1,000 pieces (50 MB each)
+- If it cuts off at 99% (990 pieces)...
+- **You resume at 99%** (only 10 pieces left to upload)
+- **10 pieces × 50 MB = 500 MB**
+- Instead of re-uploading 50 GB, you upload 500 MB!
 
-### Problème 1 : Connexion instable
+**Result**: **You only re-upload 1% of the file!** 🎉
 
-**Sans TUS** : Un simple saut de wifi, et tout est à refaire
+## 💡 In Your FastUpload Project
 
-**Avec TUS** :
-```
-12:00 - Upload commence
-12:15 - Wifi coupe (30% terminé)
-12:30 - Wifi revient → TUS reprend à 30%
-13:00 - Upload terminé
-```
+### How FastUpload Uses TUS
 
-### Problème 2 : Fichiers trop gros pour la mémoire
+FastUpload implements TUS protocol in two parts:
 
-**Sans TUS** : Le fichier de 50 Go doit être **en entier** dans la mémoire de votre ordinateur
+#### 1. TUS Server (Backend)
 
-**Avec TUS** :
-```
-Le fichier reste sur votre disque dur
-TUS lit et envoie 50 Mo à la fois
-Mémoire utilisée : 50 Mo (pas 50 Go !)
-```
-
-### Problème 3 : Navigateur qui plante
-
-**Sans TUS** : Si votre navigateur plante, tout est perdu
-
-**Avec TUS** :
-```
-Navigateur plante à 75%
-Vous rouvrez le navigateur
-TUS voit que 75% est déjà sur le serveur
-Vous continuez à 75%
-```
-
-### Problème 4 : Temps d'upload très long
-
-**Sans TUS** : 50 Go à 50 Mb/s = **2 heures 20 minutes**
-- Si ça coupe à 2h15, vous perdez **2h15 de travail**
-
-**Avec TUS** :
-- Même scénario
-- Mais vous ne reprenez que **5 minutes** de données
-- **Économie : 2h10** !
-
----
-
-## 📊 TUS vs Upload Classique
-
-| Aspect | Upload Classique | TUS |
-|--------|-----------------|-----|
-| **Reprise après coupure** | ❌ Impossible | ✅ Automatique |
-| **Fichiers volumineux** | ❌ Problématique | ✅ Optimisé |
-| **Utilisation mémoire** | ❌ Fichier entier en RAM | ✅ Morceaux successifs |
-| **Fiabilité** | ⚠️ Fragile | ✅ Robuste |
-| **Temps perdu en cas d'erreur** | ❌ Tout à refaire | ✅ Seulement les morceaux manquants |
-| **Progression visible** | ❌ Souvent absente | ✅ Détaillée |
-| **Upload parallèle** | ⚠️ Difficile | ✅ Facile |
-
----
-
-## 🎨 Dans votre projet FastUpload
-
-### Ce que vous avez déjà :
-
-#### 1. Serveur TUS (server.js)
 ```javascript
-// Le serveur qui reçoit les fichiers
+// server.js - The server that receives files
+
+// TUS server configuration
 const tusServer = new Server({
-  datastore: new FileStore({ directory: './uploads' }),
-  maxFileSize: 50 * 1024 * 1024 * 1024, // 50 Go
+  datastore: new FileStore({
+    directory: UPLOAD_DIR,  // uploads/ directory
+  }),
+  path: '/upload',  // TUS endpoint
+  maxSize: MAX_FILE_SIZE,  // 50 GB limit
+});
+
+// Express route for TUS
+app.all('/upload', (req, res) => {
+  tusServer.handle(req, res);
 });
 ```
 
-**Ce qu'il fait** :
-- Reçoit les morceaux (chunks)
-- Les stocke sur le disque
-- Dit au navigateur quels morceaux il a
-- Réassemble les morceaux à la fin
+#### 2. TUS Client (Frontend)
 
-#### 2. Client TUS (public/index.html)
 ```javascript
+// public/index.html - The browser that uploads files
+
 const upload = new tus.Upload(file, {
-  endpoint: '/upload',
-  chunkSize: 50 * 1024 * 1024, // 50 Mo
-  // ... configuration
+  endpoint: '/upload',  // TUS server endpoint
+  chunkSize: 50 * 1024 * 1024,  // 50 MB chunks
+  retryDelays: [0, 1000, 3000, 5000],  // Retry delays
+
+  // Upload progress callback
+  onProgress: (bytesUploaded, bytesTotal) => {
+    const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
+    updateProgress(uploadId, percentage);
+  },
+
+  // Upload complete callback
+  onSuccess: () => {
+    updateStatus(uploadId, 'completed');
+  },
+
+  // Upload error callback
+  onError: (error) => {
+    console.error('Upload failed:', error);
+    updateStatus(uploadId, 'error', error.message);
+  },
 });
+
+// Start upload
+upload.start();
 ```
 
-**Ce qu'il fait** :
-- Découpe le fichier en morceaux de 50 Mo
-- Envoie les morceaux un par un
-- Affiche la progression en temps réel
-- Détecte si un morceau est déjà envoyé (pour le sauter)
+### Metadata File
 
-#### 3. Interface utilisateur
+TUS creates a metadata file for each upload:
 
-Vous voyez :
-```
-MonFichier.mp4 (10 Go)
-
-████████████░░░░░░░░░░░░░  60%  (6 Go / 10 Go)
-Vitesse : 45 Mo/s
-Restant : 1m 30s
-
-Morceau 120/200 terminé
+```json
+{
+  "id": "abc123def456",
+  "metadata": {
+    "filename": "large-video.mp4",
+    "filetype": "video/mp4"
+  },
+  "size": 53687091200,  // 50 GB
+  "offset": 26843545600,  // 25 GB (50% uploaded)
+  "creation_date": "2026-01-25T10:00:00.000Z"
+}
 ```
 
-### Ce que vous pouvez contrôler :
+**`offset`** indicates where upload is:
+- **offset: 0** → 0 bytes (0%)
+- **offset: 26843545600** → 25 GB (50%)
+- **offset: 53687091200** → 50 GB (100%)
 
-#### Taille des morceaux (dans public/index.html)
+When you resume:
+- Browser reads `offset` from server
+- Uploads from `offset` to end
+- Only remaining bytes are uploaded
 
-```javascript
-const CHUNK_SIZE = 50 * 1024 * 1024; // 50 Mo
+## ⚙️ Configuration
+
+### Chunk Size
+
+**Default**: 50 MB
+
+In `.env`:
+```
+CHUNK_SIZE_MB=50
 ```
 
-**Pourquoi changer ?**
+**Trade-offs**:
 
-| Taille | Avantages | Inconvénients | Utilisation |
-|--------|-----------|---------------|-------------|
-| **10 Mo** | Meilleure reprise | Plus de requêtes | Connexion très instable |
-| **50 Mo** (par défaut) | Bon équilibre | - | Connexion standard |
-| **100 Mo** | Plus rapide | Moins résilient | Connexion très stable |
-| **200 Mo** | Très rapide | Difficile à reprendre | Fibre ultra-rapide |
+| Chunk Size | Speed | Resume Capability | Network Condition |
+|------------|--------|------------------|-------------------|
+| **10 MB** | Slower | More resilient | Unstable/slow |
+| **50 MB** | Balanced | Good | Standard broadband |
+| **100 MB** | Faster | Less resilient | Fast/stable |
+| **200 MB** | Very fast | Difficult to resume | Ultra-fast |
 
-#### Limite de taille (dans server.js)
+You can increase or decrease based on your server storage.
 
-```javascript
-const MAX_FILE_SIZE = 50 * 1024 * 1024 * 1024; // 50 Go
+**Recommendation**: Use 50 MB for most cases. Smaller (10-25 MB) for unstable networks. Larger (100-200 MB) for very fast networks.
+
+### Upload Directory
+
+**Default**: `uploads/`
+
+Files are stored in `uploads/` directory with hash IDs and metadata files.
+
+**Example**:
+```
+uploads/
+├── abc123def456              ← Partial file (25 GB)
+├── abc123def456.json          ← Metadata file
+├── xyz789ghi012              ← Complete file (50 GB)
+└── xyz789ghi012.json          ← Metadata file
 ```
 
-Vous pouvez augmenter ou diminuer selon votre stockage serveur.
+## ❓ FAQ
+
+### Q1: What happens if I close my browser?
+
+**A**: Nothing is lost. TUS saves progress in metadata files on the server.
+
+**How it works**:
+- Browser closes at 50% upload
+- Server has 50% of file saved
+- Metadata file shows offset: 50%
+- When you reopen browser...
+- TUS reads metadata file
+- Resume from 50%
+
+### Q2: Is TUS secure?
+
+**A**: Yes, TUS is secure when properly implemented.
+
+**Security features**:
+- ✅ HTTPS/TLS encryption (recommended)
+- ✅ File integrity verification (each chunk)
+- ✅ Unique upload IDs (prevents conflicts)
+- ✅ Server-side validation (file type, size)
+- ✅ No partial file exposure (only when complete)
+
+**Note**: Security also depends on your server configuration (HTTPS, access control, etc.).
+
+### Q3: Is TUS slower than traditional upload?
+
+**A**: No, speed is almost identical. In fact, it's **faster** because:
+- Less data to upload (resume capability)
+- Streaming (low memory usage)
+- Parallel uploads possible
+- No full file upload on resume
+
+**Overhead**: Very small (few KB per chunk for metadata).
+
+**Example**: 50 GB file at 10 MB/s
+- Traditional upload: 5000 seconds (83.3 minutes)
+- TUS upload: 5000 seconds (same)
+- Resume at 50%: Only 2500 seconds (41.7 minutes) to finish!
+
+### Q4: Can I upload multiple files at the same time?
+
+**A**: Yes! FastUpload supports parallel uploads. You can upload 5, 10, or even 20 files simultaneously, each with its own progress.
+
+**How it works**:
+- Each file gets its own TUS upload ID
+- Each file has its own offset
+- Each file uploads independently
+- UI shows progress for each file
+
+### Q5: What happens if the server restarts?
+
+**A**: Uploads are not lost. Metadata files are saved on disk.
+
+**How it works**:
+- Upload at 75% when server restarts
+- Server restarts
+- Metadata file on disk shows offset: 75%
+- Server reads metadata file on startup
+- Resume from 75%
+
+**Note**: Only uploads with data on disk can be resumed. Uploads with 0 bytes are considered failed.
+
+### Q6: Can I resume from a different computer?
+
+**A**: No, you must resume from the same computer with the same file.
+
+**Why**:
+- TUS tracks progress by upload ID and file checksum
+- Different computer = different file path/ID
+- To resume, you need:
+  - Same upload ID (from server)
+  - Same file (same content, same size)
+  - Same TUS client configuration
+
+**Alternative**: Copy partial file to new computer and continue upload manually.
+
+### Q7: Can I upload files of 100 GB or 200 GB?
+
+**A**: Yes, with proper configuration.
+
+**Requirements**:
+- Sufficient disk space on server
+- `MAX_FILE_SIZE_GB` set high enough in `.env`
+- `client_max_body_size` set high enough in Nginx (if using)
+- Fast and stable internet connection
+
+**Configuration**:
+```bash
+# .env
+MAX_FILE_SIZE_GB=200  # Allow 200 GB files
+```
+
+**Note**: Larger files take longer and have higher risk of interruption. Ensure good network stability.
+
+### Q8: Are files corrupted if there's a network error?
+
+**A**: No! TUS verifies each chunk. If a chunk is corrupted, it's automatically re-uploaded. At the end, the server verifies complete integrity.
+
+**How it works**:
+- Chunk uploaded → Server verifies checksum
+- Checksum mismatch → Chunk corrupted
+- Server rejects chunk
+- Browser re-uploads chunk
+- Final verification → Server combines all chunks and verifies complete file
+
+### Q9: How does the server remember upload progress?
+
+**A**: Thanks to the **unique upload ID**. Each upload has a serial number. The server keeps in memory: "For ID abc123, I received 450 chunks".
+
+**Metadata file**:
+```json
+{
+  "id": "abc123",
+  "offset": 22500000000,  // 450 chunks × 50 MB
+  "size": 50000000000
+}
+```
+
+When you resume:
+- Browser provides upload ID: abc123
+- Server reads metadata file
+- Returns offset: 22500000000 (45%)
+- Browser uploads from offset to end
+
+### Q10: Is TUS complicated to use?
+
+**A**: **No!** For the end user, it's as simple as drag-and-drop a file. TUS works in the background, automatically.
+
+**User experience**:
+- Drag and drop file
+- Upload starts with progress bar
+- If interrupted, resume automatically
+- No manual intervention needed
+
+**Developer experience**:
+- TUS server: Easy to configure (like Express routes)
+- TUS client: Simple API (upload.start(), upload.resume())
+- Well-documented
+- Community support
+
+## 📝 Summary
+
+### Key Benefits of TUS
+
+1. ✅ **Divide** large files into small pieces
+2. ✅ **Resume** interrupted uploads
+3. ✅ **Save** bandwidth and time
+4. ✅ **Reliable** for unstable networks
+5. ✅ **Secure** with file integrity verification
+6. ✅ **Memory efficient** with streaming
+7. ✅ **Track** progress easily (offset)
+
+### In FastUpload
+
+- **Backend**: TUS server (`@tus/server` package)
+- **Frontend**: TUS client (`tus-js-client` CDN)
+- **Chunk size**: 50 MB (configurable)
+- **Max file size**: 50 GB (configurable)
+- **Resume**: Automatic
+- **Progress tracking**: Real-time
+
+### Next Steps
+
+1. ✅ Upload a large file (>10 MB)
+2. ✅ Interrupt at 50% (pause or close browser)
+3. ✅ Resume upload
+4. ✅ Verify it continues from 50%!
+
+## Additional Resources
+
+- [TUS Protocol Specification](https://tus.io/protocols/resumable-upload.html)
+- [TUS GitHub Repository](https://github.com/tus/tus-node-server)
+- [TUS Client Library](https://github.com/tus/tus-js-client)
+- [FastUpload README](./README.md)
 
 ---
 
-## ❓ Foire aux Questions
-
-### Q1 : Est-ce que TUS fonctionne avec tous les navigateurs ?
-
-**R** : Oui ! Chrome, Firefox, Safari, Edge, et même les navigateurs mobiles (iOS, Android).
-
-### Q2 : Est-ce que TUS est sécurisé ?
-
-**R** : Oui, surtout si vous l'utilisez avec HTTPS. Les données sont chiffrées pendant le transfert.
-
-### Q3 : Est-ce que TUS ralentit l'upload ?
-
-**R** : Non, la vitesse est quasiment identique. En fait, c'est même **plus rapide** car :
-- Pas besoin de tout recharger en cas d'erreur
-- Utilisation optimale de la connexion
-
-### Q4 : Est-ce que je peux uploader plusieurs fichiers en même temps ?
-
-**R** : Oui ! FastUpload supporte les uploads parallèles. Vous pouvez envoyer 5, 10, ou même 20 fichiers simultanément, chacun avec sa propre progression.
-
-### Q5 : Qu'arrive-t-il si je ferme mon navigateur ?
-
-**R** :
-- Les morceaux déjà envoyés sont **sauvegardés sur le serveur**
-- Quand vous revenez, TUS détecte ce qui a déjà été envoyé
-- Vous continuez là où vous étiez
-
-### Q6 : Est-ce que TUS consomme beaucoup de données mobiles ?
-
-**R** : C'est l'inverse ! Comme TUS ne reprend que les morceaux manquants, vous économisez des données en cas de coupure.
-
-### Q7 : Puis-je uploader des fichiers de 100 Go ou 200 Go ?
-
-**R** : Oui ! La seule limite est :
-- Votre espace disque serveur
-- Le temps que vous voulez attendre
-- Votre limite internet
-
-Il suffit de changer `MAX_FILE_SIZE` dans le code.
-
-### Q8 : Est-ce que les fichiers sont corrompus s'il y a une erreur réseau ?
-
-**R** : Non ! TUS vérifie chaque morceau. Si un morceau est corrompu, il est automatiquement renvoyé. À la fin, le serveur vérifie l'intégrité complète.
-
-### Q9 : Comment TUS sait-il où en est l'upload ?
-
-**R** : Grâce à l'**ID unique** de l'upload. Chaque upload a un numéro de série. Le serveur garde en mémoire : "Pour l'ID abc123, j'ai reçu 450 morceaux".
-
-### Q10 : Est-ce compliqué à utiliser ?
-
-**R** : **Non !** Pour l'utilisateur final, c'est aussi simple que de glisser-déposer un fichier. TUS travaille en arrière-plan, automatiquement.
-
----
-
-## 🎯 Résumé Simple
-
-**TUS** est comme un système de transport intelligent qui :
-
-1. ✅ **Divise** les gros fichiers en petits morceaux
-2. ✅ **Envoie** les morceaux un par un
-3. ✅ **Rappelle** ce qui a déjà été envoyé
-4. ✅ **Reprend** là où ça s'est arrêté
-5. ✅ **Vérifie** que tout est complet
-6. ✅ **Réassemble** le fichier original
-
-**Résultat** : Upload de fichiers volumineux (50 Go et plus) fiable, reproductible, sans stress !
-
----
-
-## 📚 Pour aller plus loin
-
-- **Site officiel TUS** : [tus.io](https://tus.io)
-- **Documentation technique** : [TUS Protocol Specification](https://tus.io/protocols/resumable-upload.html)
-- **Exemples d'utilisation** : [TUS Implementations](https://tus.io/implementations.html)
-
----
-
-## 💡 Conclusion
-
-**TUS est la solution moderne pour uploader des fichiers volumineux**. Il transforme l'upload stressant de gros fichiers en une expérience fluide et fiable.
-
-Dans votre projet FastUpload, TUS travaille en arrière-plan pour vous permettre d'uploader des fichiers de 50 Go (ou plus) sans craindre que tout soit à recommencer en cas de problème.
-
-**En résumé : Upload intelligent, reprise automatique, pas de stress !** 🎉
+**Need help?** Check out [Troubleshooting Guide](./TROUBLESHOOTING.md) or [Resume Guide](./RESUME_GUIDE.md)
