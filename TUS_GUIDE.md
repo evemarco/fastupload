@@ -61,7 +61,7 @@ Imagine you need to send a **50 GB file** (size of 50 full movies or 10,000 phot
 
 The browser and server "talk":
 
-```
+```json
 Browser: "Hello, I want to upload this 50 GB file"
 Server: "OK, I'll create an upload with ID abc123"
 Browser: "Sending first piece (1-50 MB)"
@@ -70,7 +70,7 @@ Browser: "Sending second piece (51-100 MB)"
 Server: "Received, offset: 100 MB"
 ... (continues until 50 GB)
 Server: "All pieces received! Upload complete!"
-```
+```text
 
 ### Key Concept: **Offset**
 
@@ -160,15 +160,15 @@ Imagine you're moving from one house to another.
 
 ## 📊 TUS vs Traditional Upload
 
-| Aspect | Traditional Upload | TUS Upload |
+|Aspect| Traditional Upload |TUS Upload|
 |---------|-------------------|-------------|
-| **File Division** | One piece | Multiple pieces |
-| **Resume Capability** | ❌ No | ✅ Yes |
-| **Upload Interruption** | Restart from 0% | Resume from where stopped |
-| **Corrupted Piece** | Entire file corrupted | Only piece corrupted |
-| **Network Timeout** | Fails on large files | No timeout (small pieces) |
-| **Memory Usage** | Full file in RAM | Streaming (low RAM) |
-| **Progress Tracking** | Difficult | Easy (offset tracking) |
+|**File Division**| One piece |Multiple pieces|
+|**Resume Capability**| ❌ No |✅ Yes|
+|**Upload Interruption**| Restart from 0% |Resume from where stopped|
+|**Corrupted Piece**| Entire file corrupted |Only piece corrupted|
+|**Network Timeout**| Fails on large files |No timeout (small pieces)|
+|**Memory Usage**| Full file in RAM |Streaming (low RAM)|
+|**Progress Tracking**| Difficult |Easy (offset tracking)|
 
 ### Real Example: 50 GB File
 
@@ -260,7 +260,7 @@ const tusServer = new Server({
 app.all('/upload', (req, res) => {
   tusServer.handle(req, res);
 });
-```
+```text
 
 #### 2. TUS Client (Frontend)
 
@@ -307,7 +307,7 @@ const upload = new tus.Upload(file, {
 
 // Start upload
 upload.start();
-```
+```text
 
 ### Metadata File
 
@@ -324,7 +324,7 @@ TUS creates a metadata file for each upload:
   "offset": 26843545600,  // 25 GB (50% uploaded)
   "creation_date": "2026-01-25T10:00:00.000Z"
 }
-```
+```text
 
 **`offset`** indicates where upload is:
 
@@ -348,9 +348,9 @@ When you resume:
 
 **In `.env`**:
 
-```
+```text
 CHUNK_SIZE_MB=50
-```
+```text
 
 **How it works**:
 
@@ -361,12 +361,12 @@ CHUNK_SIZE_MB=50
 
 **Trade-offs**:
 
-| Chunk Size | Speed | Resume Capability | Network Condition |
+|Chunk Size| Speed |Resume Capability| Network Condition |
 |------------|--------|------------------|-------------------|
-| **10 MB** | Slower | More resilient | Unstable/slow |
-| **50 MB** | Balanced | Good | Standard broadband |
-| **100 MB** | Faster | Less resilient | Fast/stable |
-| **200 MB** | Very fast | Difficult to resume | Ultra-fast |
+|**10 MB**| Slower |More resilient| Unstable/slow |
+|**50 MB**| Balanced |Good| Standard broadband |
+|**100 MB**| Faster |Less resilient| Fast/stable |
+|**200 MB**| Very fast |Difficult to resume| Ultra-fast |
 
 You can increase or decrease based on your server storage.
 
@@ -382,7 +382,7 @@ FastUpload provides a `/api/config` endpoint that returns server configuration t
 
 ```http
 GET /api/config
-```
+```text
 
 **Response**:
 
@@ -392,7 +392,7 @@ GET /api/config
   "chunkSize": 50,
   "corsOrigin": "*"
 }
-```
+```text
 
 **Fields**:
 
@@ -408,9 +408,9 @@ GET /api/config
 
 **In `.env`**:
 
-```
+```text
 CORS_ORIGIN=*
-```
+```text
 
 **Examples**:
 
@@ -429,13 +429,13 @@ Files are stored in `uploads/` directory with hash IDs and metadata files.
 
 **Example**:
 
-```
+```text
 uploads/
 ├── abc123def456              ← Partial file (25 GB)
 ├── abc123def456.json          ← Metadata file
 ├── xyz789ghi012              ← Complete file (50 GB)
 └── xyz789ghi012.json          ← Metadata file
-```
+```text
 
 ## ❓ FAQ
 
@@ -539,7 +539,7 @@ uploads/
 ```bash
 # .env
 MAX_FILE_SIZE_GB=200  # Allow 200 GB files
-```
+```text
 
 **Note**: Larger files take longer and have higher risk of interruption. Ensure good network stability.
 
@@ -567,7 +567,7 @@ MAX_FILE_SIZE_GB=200  # Allow 200 GB files
   "offset": 22500000000,  // 450 chunks × 50 MB
   "size": 50000000000
 }
-```
+```text
 
 When you resume:
 

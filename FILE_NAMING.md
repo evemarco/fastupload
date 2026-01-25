@@ -8,19 +8,19 @@ When you upload files to FastUpload, they are stored in the `uploads/` directory
 
 Files are renamed automatically when upload completes using this format:
 
-```
+```text
 original-name-timestamp.extension
-```
+```text
 
 ### Example
 
 If you upload `my-document.pdf`:
 
-```
+```text
 uploads/
 ├── my-document-1706159234567.pdf
 └── my-document-1706159234567.pdf.json
-```
+```text
 
 ### Why the Timestamp?
 
@@ -34,10 +34,10 @@ The timestamp (`1706159234567`) is added to:
 
 Every uploaded file has a corresponding `.json` file:
 
-```
+```text
 Softbiz-Proposal-2009-1769338476465.pdf
 Softbiz-Proposal-2009-1769338476465.pdf.json  ← Metadata
-```
+```text
 
 The `.json` file contains:
 
@@ -52,7 +52,7 @@ The `.json` file contains:
   "offset": 0,
   "creation_date": "2026-01-25T10:41:40.419Z"
 }
-```
+```text
 
 ## Automatic Cleanup
 
@@ -79,7 +79,7 @@ When you call `GET /api/uploads`, files are returned with their original names:
     "url": "/upload/Softbiz-Proposal-2009-1769338476465.pdf"
   }
 ]
-```
+```text
 
 - `id`: The actual filename on disk (with timestamp)
 - `name`: The original filename you uploaded (for display)
@@ -98,10 +98,10 @@ If you see files with hash names (like `afc1e059fb8e0e42d297ced81117c5c4`):
 
 If you upload the same file twice:
 
-```
+```text
 report.pdf          →  report-1706159234000.pdf
 report.pdf (again) →  report-1706159235000.pdf
-```
+```text
 
 Both files are kept with different timestamps.
 
@@ -122,20 +122,20 @@ du -sh uploads/
 
 # List files by size
 du -h uploads/* | sort -h
-```
+```text
 
 ### Organize Files (Optional)
 
 If you want to organize files by date, you can modify the server to use subdirectories:
 
-```
+```text
 uploads/
 ├── 2026-01/
 │   ├── file1.pdf
 │   └── file2.pdf
 ├── 2026-02/
 │   └── file3.pdf
-```
+```text
 
 ### Clean Old Files
 
@@ -144,7 +144,7 @@ You can create a cron job to clean files older than X days:
 ```bash
 # Delete files older than 30 days
 find uploads/ -type f -mtime +30 -delete
-```
+```text
 
 ## Security
 

@@ -13,13 +13,13 @@ npm install -g pnpm
 
 # Or using the standalone script
 curl -fsSL https://get.pnpm.io/install.sh | sh -
-```
+```text
 
 ## 1. Install Dependencies
 
 ```bash
 pnpm install
-```
+```text
 
 ## 2. Start the Server
 
@@ -38,13 +38,13 @@ HOST=10.8.0.1 pnpm start
 
 # Both custom port and host
 HOST=10.8.0.1 PORT=8080 pnpm start
-```
+```text
 
 The server will show available access URLs:
 
 **Default (HOST=0.0.0.0)**:
 
-```
+```text
 === FastUpload Server ===
 Server running on http://localhost:3000
 Upload directory: /data/fastupload/uploads
@@ -55,17 +55,17 @@ TUS endpoint: http://localhost:3000/upload
    - Local: http://localhost:3000
    - Network: http://YOUR_LOCAL_IP:3000
    - VPN: http://YOUR_VPN_IP:3000
-```
+```text
 
 **With VPN IP (HOST=10.8.0.1)**:
 
-```
+```text
 === FastUpload Server ===
 Server running on http://10.8.0.1:3000
 Upload directory: /data/fastupload/uploads
 Max file size: 50 GB
 TUS endpoint: http://10.8.0.1:3000/upload
-```
+```text
 
 ## 3. Open Your Browser
 

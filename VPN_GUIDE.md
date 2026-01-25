@@ -16,7 +16,7 @@ cp .env.example .env
 
 # Edit .env
 nano .env
-```
+```text
 
 ### Step 2: Configure Your VPN IP
 
@@ -26,27 +26,27 @@ Edit `.env` and set your VPN IP:
 # Replace 10.8.0.1 with your actual VPN IP
 HOST=10.8.0.1
 PORT=3000
-```
+```text
 
 ### Step 3: Start the Server
 
 ```bash
 pnpm start
-```
+```text
 
 ### Step 4: Access from VPN
 
 Open your browser and navigate to:
 
-```
+```text
 http://YOUR_VPN_IP:3000
-```
+```text
 
 Example:
 
-```
+```text
 http://10.8.0.1:3000
-```
+```text
 
 ---
 
@@ -67,7 +67,7 @@ ifconfig
 #         inet 10.8.0.1  netmask 255.255.255.0  destination 10.8.0.1
 #                                      ↑
 #                                  Your VPN IP!
-```
+```text
 
 ### Windows
 
@@ -81,7 +81,7 @@ ipconfig
 #    IPv4 Address. . . . . . . . . . . . : 10.8.0.1
 #                                                 ↑
 #                                          Your VPN IP!
-```
+```text
 
 ### Alternative: Check VPN Client Settings
 
@@ -99,7 +99,7 @@ Your VPN client (WireGuard, OpenVPN, NordVPN, etc.) should display your VPN IP i
 # .env
 HOST=0.0.0.0
 PORT=3000
-```
+```text
 
 **Access URLs**:
 
@@ -119,7 +119,7 @@ PORT=3000
 # .env
 HOST=10.8.0.1
 PORT=3000
-```
+```text
 
 **Access URL**:
 
@@ -137,7 +137,7 @@ PORT=3000
 # .env
 HOST=192.168.1.100
 PORT=3000
-```
+```text
 
 **Access URL**:
 
@@ -155,7 +155,7 @@ PORT=3000
 # .env
 HOST=127.0.0.1
 PORT=3000
-```
+```text
 
 **Access URL**:
 
@@ -177,7 +177,7 @@ sudo ufw allow 3000
 
 # Or with iptables
 sudo iptables -A INPUT -p tcp --dport 3000 -j ACCEPT
-```
+```text
 
 ### 2. VPN Security
 
@@ -204,7 +204,7 @@ server {
         proxy_pass http://10.8.0.1:3000;
     }
 }
-```
+```text
 
 **Option B: Self-Signed Certificate with Node.js**
 
@@ -220,7 +220,7 @@ const options = {
 https.createServer(options, app).listen(PORT, HOST, () => {
   console.log(`HTTPS server running on https://${HOST}:${PORT}`);
 });
-```
+```text
 
 ---
 
@@ -237,18 +237,18 @@ https.createServer(options, app).listen(PORT, HOST, () => {
    ip addr show tun0  # or wg0, tap0, etc.
    ```
 
-2. **Verify correct VPN IP**
+1. **Verify correct VPN IP**
    - Make sure HOST matches your actual VPN IP
    - Re-check IP after VPN reconnection
 
-3. **Check firewall**
+2. **Check firewall**
 
    ```bash
    sudo ufw status
    sudo ufw allow 3000
    ```
 
-4. **Test with ping**
+3. **Test with ping**
 
    ```bash
    # Test if VPN IP is reachable
@@ -358,7 +358,7 @@ https.createServer(options, app).listen(PORT, HOST, () => {
 # .env
 HOST=0.0.0.0
 PORT=3000
-```
+```text
 
 Access from anywhere (local, VPN, local network).
 
@@ -370,7 +370,7 @@ Access from anywhere (local, VPN, local network).
 # .env
 HOST=192.168.1.100
 PORT=3000
-```
+```text
 
 Access from any device on your home network.
 
@@ -382,7 +382,7 @@ Access from any device on your home network.
 # .env
 HOST=10.8.0.1
 PORT=3000
-```
+```text
 
 Access only via VPN (most secure).
 
@@ -403,7 +403,7 @@ PORT=3001
 
 # Start with specific config
 pnpm start --env-file=.env.user1
-```
+```text
 
 ---
 
@@ -429,7 +429,7 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target
-```
+```text
 
 Start the service:
 
@@ -437,7 +437,7 @@ Start the service:
 sudo systemctl enable fastupload
 sudo systemctl start fastupload
 sudo systemctl status fastupload
-```
+```text
 
 ---
 
@@ -465,7 +465,7 @@ pnpm exec pm2 restart fastupload
 # Save PM2 configuration
 pnpm exec pm2 save
 pnpm exec pm2 startup
-```
+```text
 
 ---
 
@@ -482,7 +482,7 @@ ls uploads/ | wc -l
 
 # Monitor in real-time
 watch -n 1 'ls -lh uploads/'
-```
+```text
 
 ---
 

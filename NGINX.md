@@ -11,7 +11,7 @@ sudo apt install nginx
 
 # CentOS/RHEL
 sudo yum install nginx
-```
+```text
 
 ### 2. Deploy Configuration
 
@@ -24,7 +24,7 @@ sudo ln -s /etc/nginx/sites-available/fastupload /etc/nginx/sites-enabled/
 
 # Remove default site (optional)
 sudo rm /etc/nginx/sites-enabled/default
-```
+```text
 
 ### 3. Configure Domain
 
@@ -32,13 +32,13 @@ Edit configuration:
 
 ```bash
 sudo nano /etc/nginx/sites-available/fastupload
-```
+```text
 
 Update this line:
 
 ```nginx
 server_name your-domain.com www.your-domain.com;
-```
+```text
 
 Replace with your actual domain.
 
@@ -53,15 +53,15 @@ sudo systemctl restart nginx
 
 # Or reload (no downtime)
 sudo systemctl reload nginx
-```
+```text
 
 ### 5. Access Your Server
 
 Visit your domain:
 
-```
+```text
 http://your-domain.com
-```
+```text
 
 You should see FastUpload login page (if authentication enabled).
 
@@ -80,7 +80,7 @@ sudo certbot --nginx -d your-domain.com -d www.your-domain.com
 # 1. Enter email
 # 2. Agree to terms
 # 3. Choose redirect (recommended)
-```
+```text
 
 Certbot will automatically:
 
@@ -97,7 +97,7 @@ sudo nginx -t
 
 # Visit HTTPS
 https://your-domain.com
-```
+```text
 
 ## Configuration Summary
 
@@ -138,7 +138,7 @@ sudo grep client_max_body /etc/nginx/sites-available/fastupload
 # Edit if too small
 sudo nano /etc/nginx/sites-available/fastupload
 sudo systemctl reload nginx
-```
+```text
 
 ### 504 Gateway Timeout
 
@@ -151,7 +151,7 @@ sudo grep timeout /etc/nginx/sites-available/fastupload
 # Edit if too small
 sudo nano /etc/nginx/sites-available/fastupload
 sudo systemctl reload nginx
-```
+```text
 
 ### Can't Access via Domain
 
@@ -170,7 +170,7 @@ sudo nginx -t
 
 # 5. Check Nginx status
 sudo systemctl status nginx
-```
+```text
 
 ### SSL Issues
 
@@ -186,7 +186,7 @@ openssl s_client -connect your-domain.com:443
 
 # 4. Renew certificate
 sudo certbot renew --dry-run
-```
+```text
 
 ## Advanced Topics
 
@@ -202,14 +202,14 @@ proxy_connect_timeout 600s;
 proxy_send_timeout 600s;
 proxy_read_timeout 600s;
 send_timeout 600s;
-```
+```text
 
 ### Multiple Domains
 
 ```nginx
 server_name your-domain.com www.your-domain.com
              another-domain.com www.another-domain.com;
-```
+```text
 
 ### IP Access Control
 
@@ -223,7 +223,7 @@ location / {
 
     # ... rest of proxy config
 }
-```
+```text
 
 ## Documentation
 

@@ -8,13 +8,13 @@
 # Install Node.js >= 20.0.0
 # Then install pnpm globally
 npm install -g pnpm
-```
+```text
 
 ### 2. Install Dependencies
 
 ```bash
 pnpm install
-```
+```bash
 
 This will create a `pnpm-lock.yaml` file that should be committed to version control.
 
@@ -26,11 +26,11 @@ pnpm run dev
 
 # Or start normally
 pnpm start
-```
+```text
 
 ## Project Structure
 
-```
+```text
 fastupload/
 ├── server.js              # Main Express server with TUS protocol
 ├── public/
@@ -43,7 +43,7 @@ fastupload/
 ├── README.md              # Main documentation
 ├── QUICKSTART.md          # Quick start guide
 └── CONTRIBUTING.md        # This file
-```
+```text
 
 ## Development Workflow
 
@@ -61,7 +61,7 @@ pnpm update <package-name>
 
 # Update all packages
 pnpm update
-```
+```text
 
 ### Updating Dependencies
 
@@ -69,7 +69,7 @@ Check for outdated packages:
 
 ```bash
 pnpm outdated
-```
+```text
 
 Update to latest versions:
 
@@ -79,14 +79,14 @@ pnpm update
 
 # Update specific package
 pnpm update express
-```
+```text
 
 ### Running Tests
 
 ```bash
 # Run tests (when implemented)
 pnpm test
-```
+```bash
 
 ### Code Style
 
@@ -134,7 +134,7 @@ If you see `require is not defined`:
 pnpm store prune
 rm -rf node_modules pnpm-lock.yaml
 pnpm install
-```
+```bash
 
 ### Server Won't Start
 
@@ -162,7 +162,7 @@ pnpm install
 ```bash
 # For npm packages only
 pnpm publish
-```
+```text
 
 ## Best Practices
 

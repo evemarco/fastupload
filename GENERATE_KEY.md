@@ -10,7 +10,7 @@ pnpm generate-key
 
 # Or run script directly
 node scripts/generate-key.js
-```
+```text
 
 ## What It Does
 
@@ -30,7 +30,7 @@ node scripts/generate-key.js
 
 ## Example Output
 
-```
+```text
 🔐 FastUpload Access Key Generator
 
 =====================================
@@ -52,7 +52,7 @@ Generated key (32 characters):
    • Share this key only with authorized users
 
 ✅ Done! Restart of server with: pnpm start
-```
+```bash
 
 ## Next Steps
 
@@ -64,7 +64,7 @@ After generating a new key:
    pnpm start
    ```
 
-2. **Test authentication**:
+1. **Test authentication**:
 
    ```bash
    # Via URL
@@ -75,7 +75,7 @@ After generating a new key:
    # → Enter the key
    ```
 
-3. **Share with users** (if needed):
+2. **Share with users** (if needed):
 
    ```
    Access Key: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
@@ -91,7 +91,7 @@ After generating a new key:
 pnpm install
 pnpm generate-key
 pnpm start
-```
+```text
 
 ### 2. Key Rotation
 
@@ -102,7 +102,7 @@ pnpm start
 
 # Share new key with users
 # Discard old key
-```
+```text
 
 ### 3. After Security Breach
 
@@ -113,7 +113,7 @@ pnpm start
 
 # Notify all users of new key
 # Assume all data is compromised
-```
+```text
 
 ## Security
 
@@ -151,14 +151,14 @@ touch .env
 # Solution 3: Check permissions
 chmod +x scripts/generate-key.js
 pnpm generate-key
-```
+```text
 
 ### Problem: Key not applied
 
 ```bash
 # Restart server to apply new key
 pnpm start
-```
+```text
 
 ### Problem: Multiple ACCESS_KEY lines
 
@@ -168,7 +168,7 @@ nano .env
 
 # Should have only one:
 ACCESS_KEY=a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
-```
+```text
 
 ## Advanced Usage
 
@@ -182,7 +182,7 @@ const KEY_LENGTH = 64; // 64 characters (more secure)
 
 // Regenerate
 pnpm generate-key
-```
+```text
 
 ### Multiple Environments
 
@@ -196,7 +196,7 @@ pnpm generate-key
 # Production
 cd /path/to/prod
 pnpm generate-key
-```
+```text
 
 ## Resources
 

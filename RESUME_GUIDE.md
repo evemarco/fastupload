@@ -16,11 +16,11 @@ FastUpload automatically remembers and can resume **interrupted uploads**, even 
 
 When an upload starts, TUS creates two files:
 
-```
+```text
 uploads/
 ├── 3aff8c6abb9a421cb0168a9da0e02b92        ← Upload file (partial or complete)
 └── 3aff8c6abb9a421cb0168a9da0e02b92.json  ← Metadata file
-```
+```text
 
 The **metadata file** contains:
 
@@ -35,7 +35,7 @@ The **metadata file** contains:
   "offset": 2684354560,      ← Bytes uploaded so far (2.6GB, 50%)
   "creation_date": "2026-01-25T10:41:40.419Z"
 }
-```
+```text
 
 **Key Points**:
 
@@ -93,7 +93,7 @@ if (offset === 0 && stats.size > 0 && totalSize > 0) {
   offset = stats.size;
   console.log(`Correcting offset for ${filename}: ${offset} bytes (was 0)`);
 }
-```
+```text
 
 **How it works**:
 
@@ -112,7 +112,7 @@ if (offset === 0 && stats.size > 0 && totalSize > 0) {
 
 **Example**:
 
-```
+```text
 Before correction:
 - Metadata: offset = 0
 - File size: 25 GB (25,000,000,000 bytes)
@@ -124,7 +124,7 @@ After correction:
 - File size: 25 GB (unchanged)
 - Total size: 50 GB
 - Resume from: 50% ✅
-```
+```bash
 
 **Note**: Correction is automatic. No manual intervention required.
 
@@ -174,7 +174,7 @@ After correction:
 
 ```bash
 GET /api/uploads
-```
+```text
 
 Response:
 
@@ -189,13 +189,13 @@ Response:
     "status": "completed"
   }
 ]
-```
+```text
 
 ### List Partial (In-Progress) Uploads
 
 ```bash
 GET /api/uploads/partial
-```
+```text
 
 Response:
 
@@ -217,7 +217,7 @@ Response:
     }
   }
 ]
-```
+```text
 
 **Status Values**:
 
@@ -286,7 +286,7 @@ rm uploads/PARTIAL_FILE_ID.json
 # Or use the UI
 # - Go to upload page
 # - Click "Delete" on partial upload
-```
+```text
 
 ### Clean Old Uploads (Cron Job)
 
@@ -294,7 +294,7 @@ rm uploads/PARTIAL_FILE_ID.json
 # Delete partial uploads older than 7 days
 find uploads/ -name "*.json" -mtime +7 -exec rm {} \;
 find uploads/ -size 0 -mtime +7 -delete
-```
+```text
 
 ## Configuration
 
@@ -323,7 +323,7 @@ files.forEach(filename => {
     }
   }
 });
-```
+```bash
 
 ## Troubleshooting
 
@@ -339,15 +339,15 @@ files.forEach(filename => {
    curl http://YOUR_HOST:PORT/api/uploads/partial
    ```
 
-2. **Check browser console**:
+1. **Check browser console**:
    - Open DevTools (F12)
    - Look for errors in Console tab
 
-3. **Clear browser cache**:
+2. **Clear browser cache**:
    - `Ctrl + Shift + R` (Windows)
    - `Cmd + Shift + R` (Mac)
 
-4. **Check uploads directory**:
+3. **Check uploads directory**:
 
    ```bash
    ls -la uploads/
@@ -444,7 +444,7 @@ Partial uploads use disk space:
 ```bash
 # Monitor uploads directory
 watch -n 10 'du -sh uploads/'
-```
+```text
 
 ### 3. Backup Metadata Files
 
@@ -458,7 +458,7 @@ Metadata files are critical for resume:
 ```bash
 # Backup metadata files periodically
 rsync -av uploads/*.json /backup/metadata/
-```
+```text
 
 ### 4. Use Appropriate Chunk Sizes
 
@@ -494,7 +494,7 @@ upload.findPreviousUploads().then((previousUploads) => {
     upload.start();
   }
 });
-```
+```text
 
 ### Resume with Different File
 
@@ -505,7 +505,7 @@ If you need to resume with a different file (same size, different content):
 
 // Bypass file name check
 upload.resumeFromPreviousUpload(previousUpload);
-```
+```text
 
 ⚠️ **Warning**: This can corrupt the upload if files are different!
 
@@ -531,7 +531,7 @@ fetch('/api/resume-stats', {
     timestamp: new Date().toISOString()
   })
 });
-```
+```text
 
 ## Summary
 

@@ -8,13 +8,13 @@ This guide helps you diagnose and fix common issues with FastUpload.
 
 ### Error Message
 
-```
+```text
 tus: unexpected response while creating upload, originated from request
 (method: POST, url: /upload, response code: 500,
 response text: Something went wrong with that request
 Cannot read properties of undefined (reading 'id'),
 request id: n/a)
-```
+```text
 
 ### Root Cause
 
@@ -34,7 +34,7 @@ const tusServer = new Server({ ... });
 tusServer.on(EVENTS.POST_CREATE, (event) => {
   console.log('Upload created:', event.upload.id); // ❌ event.upload is undefined
 });
-```
+```text
 
 **After (Correct)**:
 
@@ -50,7 +50,7 @@ const tusServer = new Server({
     console.log('Upload completed:', upload.id);
   },
 });
-```
+```bash
 
 ### How to Verify the Fix
 
@@ -60,7 +60,7 @@ const tusServer = new Server({
    cat server.js | grep -A 5 "onUploadCreate"
    ```
 
-2. Should show:
+1. Should show:
 
    ```javascript
    onUploadCreate(req, upload) {
@@ -68,7 +68,7 @@ const tusServer = new Server({
    },
    ```
 
-3. NOT this:
+2. NOT this:
 
    ```javascript
    tusServer.on(EVENTS.POST_CREATE, (event) => {
@@ -106,9 +106,9 @@ const tusServer = new Server({
 
 ### Error Message
 
-```
+```text
 Access to XMLHttpRequest at 'http://...' has been blocked by CORS policy
-```
+```text
 
 ### Root Cause
 
@@ -141,7 +141,7 @@ app.use(cors({
   ],
   credentials: false,
 }));
-```
+```text
 
 ### If Error Persists
 
@@ -160,7 +160,7 @@ app.use(cors({
    # Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS
    ```
 
-3. **Test with CORS disabled**:
+1. **Test with CORS disabled**:
    - Temporarily disable CORS in browser (for testing)
    - Or use browser extensions to bypass CORS (for testing only)
 
@@ -170,9 +170,9 @@ app.use(cors({
 
 ### Error Message
 
-```
+```text
 Error: ENOENT: no such file or directory, open '.../uploads/...'
-```
+```text
 
 ### Root Cause
 
@@ -191,7 +191,7 @@ chmod 755 uploads
 
 # Verify it exists
 ls -ld uploads
-```
+```javascript
 
 ### If Error Persists
 
@@ -205,7 +205,7 @@ ls -ld uploads
    echo $(process.cwd())/uploads
    ```
 
-2. **Check file system permissions**:
+1. **Check file system permissions**:
 
    ```bash
    # Check if user has write permission
@@ -213,7 +213,7 @@ ls -ld uploads
    rm uploads/test
    ```
 
-3. **Check disk space**:
+2. **Check disk space**:
 
    ```bash
    df -h
@@ -226,9 +226,9 @@ ls -ld uploads
 
 ### Error Message
 
-```
+```text
 Error: listen EADDRINUSE: address already in use :::3000
-```
+```text
 
 ### Root Cause
 
@@ -248,7 +248,7 @@ Port 3000 is already in use by another process.
    netstat -ano | findstr :3000
    ```
 
-2. **Kill the process**:
+1. **Kill the process**:
 
    ```bash
    # Linux/Mac
@@ -258,18 +258,18 @@ Port 3000 is already in use by another process.
    taskkill /PID <PID> /F
    ```
 
-3. **Or use a different port**:
+2. **Or use a different port**:
 
    ```bash
    # In .env file
    PORT=3001
    ```
 
-### Error Message
+### Port Conflict Error
 
-```
+```text
 Error: listen EADDRNOTAVAIL: address not available
-```
+```bash
 
 ### Root Cause
 
@@ -287,7 +287,7 @@ HOST address is invalid or not available.
    ipconfig
    ```
 
-2. **Update .env with correct IP**:
+1. **Update .env with correct IP**:
 
    ```bash
    # Use valid IP addresses:
@@ -490,7 +490,7 @@ pnpm start
 # - Upload created: ...
 # - Upload completed: ...
 # - Server running on ...
-```
+```text
 
 ### Enable File Logging (Optional)
 
@@ -518,7 +518,7 @@ console.log = function(message) {
   logStream.write(`${new Date().toISOString()} - ${message}\n`);
   process.stdout.write(`${message}\n`);
 };
-```
+```text
 
 ---
 
@@ -559,7 +559,7 @@ const upload = new tus.Upload(file, {
     console.error('Upload failed:', error);
   }
 });
-```
+```text
 
 ---
 
@@ -609,26 +609,26 @@ What actually happens (error messages, etc.)
 
 ## Logs
 ### Server Logs
-```
+```text
 
 Paste server logs here
 
-```
+```text
 
 ### Browser Console
-```
+```text
 
 Paste browser console logs here
 
-```
+```text
 
 ### Network Tab
-```
+```text
 
 Relevant request/response headers from Network tab
 
-```
-```
+```text
+```text
 
 ---
 

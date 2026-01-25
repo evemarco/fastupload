@@ -36,7 +36,7 @@ Edit `.env` file:
 ```bash
 # Set your access key
 ACCESS_KEY=my-secret-access-key-123
-```
+```text
 
 ### Disable Authentication
 
@@ -45,7 +45,7 @@ Edit `.env` file:
 ```bash
 # Leave empty or remove the line
 ACCESS_KEY=
-```
+```text
 
 ## Usage
 
@@ -62,9 +62,9 @@ ACCESS_KEY=
 
 Add access key to URL:
 
-```
+```text
 http://YOUR_HOST:PORT?key=my-secret-access-key-123
-```
+```text
 
 **Benefits**:
 
@@ -83,10 +83,10 @@ http://YOUR_HOST:PORT?key=my-secret-access-key-123
 
 If `ACCESS_KEY` is not set in `.env`:
 
-```
+```text
 # .env
 ACCESS_KEY=
-```
+```http
 
 Server is accessible without authentication.
 
@@ -103,7 +103,7 @@ Server is accessible without authentication.
      -c cookies.txt
    ```
 
-2. Use cookie in subsequent requests:
+1. Use cookie in subsequent requests:
 
    ```bash
    curl http://YOUR_HOST:PORT/api/uploads \\
@@ -114,7 +114,7 @@ Server is accessible without authentication.
 
 ```bash
 curl "http://YOUR_HOST:PORT/api/uploads?key=my-secret-access-key-123"
-```
+```text
 
 ### Using Header
 
@@ -125,7 +125,7 @@ curl -X POST http://YOUR_HOST:PORT/upload \\
    -H "X-Access-Key: my-secret-access-key-123" \\
    -H "Tus-Resumable: 1.0" \\
    -H "Upload-Length: 12345"
-```
+```text
 
 **Note**: This requires modifying the server to check headers.
 
@@ -141,7 +141,7 @@ openssl rand -hex 32
 
 # Output example:
 # a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0
-```
+```text
 
 ### 2. Set Access Key via Environment Variable (Production)
 
@@ -151,7 +151,7 @@ Don't commit `.env` with real access key:
 # Production
 export ACCESS_KEY=$(openssl rand -hex 32)
 pnpm start
-```
+```text
 
 ### 3. Use HTTPS
 
@@ -165,7 +165,7 @@ res.cookie('fastupload_session', sessionKey, {
   sameSite: 'lax',
   maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
 });
-```
+```text
 
 Note: In development (HTTP), use `secure: false`. For production with HTTPS, change to `secure: true`.
 
@@ -186,7 +186,7 @@ echo "ACCESS_KEY=$NEW_KEY" > .env
 
 # Step 3: Restart server
 pnpm start
-```
+```http
 
 ## Troubleshooting
 
@@ -213,21 +213,21 @@ pnpm start
    # Should show: ACCESS_KEY=my-secret-key
    ```
 
-2. **Verify key matches exactly** (case-sensitive):
+1. **Verify key matches exactly** (case-sensitive):
 
    ```
    Wrong: my-secret-key
    Correct: My-Secret-Key-123
    ```
 
-3. **Check for extra spaces**:
+2. **Check for extra spaces**:
 
    ```bash
    # Bad: ACCESS_KEY= my-key (space after =)
    # Good: ACCESS_KEY=my-key
    ```
 
-4. **Restart server** after changing `.env`:
+3. **Restart server** after changing `.env`:
 
    ```bash
    # Stop server (Ctrl+C)
@@ -339,7 +339,7 @@ app.get('/login', (req, res) => {
     companyName: 'My Company'
   });
 });
-```
+```text
 
 Then create `views/login.html` template.
 
@@ -363,7 +363,7 @@ app.post('/api/login', (req, res) => {
   // Create session
   // ...
 });
-```
+```text
 
 ### IP Whitelisting
 
@@ -382,7 +382,7 @@ app.use((req, res, next) => {
 
   res.status(403).json({ error: 'IP not allowed' });
 });
-```
+```text
 
 ### Rate Limiting
 
@@ -391,7 +391,7 @@ Limit login attempts:
 ```bash
 # Install rate-limiting package
 pnpm add express-rate-limit
-```
+```text
 
 ```javascript
 // server.js
@@ -406,7 +406,7 @@ const loginLimiter = rateLimit({
 app.post('/api/login', loginLimiter, (req, res) => {
   // ...
 });
-```
+```text
 
 ### Logout
 
@@ -418,7 +418,7 @@ app.get('/logout', (req, res) => {
   res.clearCookie('fastupload_session');
   res.redirect('/login');
 });
-```
+```text
 
 Add to frontend:
 
@@ -429,7 +429,7 @@ Add to frontend:
 function logout() {
   window.location.href = '/logout';
 }
-```
+```text
 
 ## Examples
 
@@ -443,7 +443,7 @@ ACCESS_KEY=my-secret-key-123
 # 1. Open http://localhost:3003
 # 2. Enter "my-secret-key-123"
 # 3. Upload files
-```
+```text
 
 ### Example 2: Team Access
 
@@ -461,7 +461,7 @@ pnpm start
 
 # Share URL with team:
 # http://team-server:3003?key=$KEY
-```
+```text
 
 ### Example 3: VPN Access
 
@@ -473,7 +473,7 @@ ACCESS_KEY=vpn-secret-key-456
 
 # Access from VPN
 # http://10.8.0.1:3003/login
-```
+```text
 
 ### Example 4: Public Server
 
@@ -485,7 +485,7 @@ ACCESS_KEY=
 
 # Public access, no authentication required
 # http://myserver.com
-```
+```text
 
 ## Summary
 

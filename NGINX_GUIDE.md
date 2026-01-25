@@ -17,7 +17,7 @@ sudo ln -s /etc/nginx/sites-available/fastupload /etc/nginx/sites-enabled/
 
 # Test Nginx configuration
 sudo nginx -t
-```
+```text
 
 ### 2. Update Domain Name
 
@@ -25,13 +25,13 @@ Edit the configuration file:
 
 ```bash
 sudo nano /etc/nginx/sites-available/fastupload
-```
+```text
 
 Update `server_name`:
 
 ```nginx
 server_name your-domain.com www.your-domain.com;
-```
+```text
 
 Replace `your-domain.com` with your actual domain.
 
@@ -48,7 +48,7 @@ ls -ld /mnt/disk2/uploads
 
 # If needed, add Nginx user to group with access
 # Or ensure the directory is readable by Nginx
-```
+```text
 
 ### 4. Restart Nginx
 
@@ -58,15 +58,15 @@ sudo systemctl restart nginx
 
 # Or reload (graceful, no downtime)
 sudo systemctl reload nginx
-```
+```text
 
 ### 5. Test
 
 Visit your domain:
 
-```
+```http
 http://your-domain.com
-```
+```text
 
 You should see the FastUpload login page or home page.
 
@@ -80,7 +80,7 @@ The Nginx configuration includes the following optimizations to handle large fil
 
 ```nginx
 client_max_body_size 50G;
-```
+```text
 
 - **Default Nginx**: 1MB (too small)
 - **Our config**: 50GB (matches FastUpload)
@@ -98,7 +98,7 @@ proxy_connect_timeout 300s;    # Time to establish connection
 proxy_send_timeout 300s;       # Time to send request to FastUpload
 proxy_read_timeout 300s;       # Time to read response from FastUpload
 send_timeout 300s;             # Time to transmit response
-```
+```text
 
 - **Default Nginx**: 60s (too short for large files)
 - **Our config**: 300s (5 minutes)
@@ -113,7 +113,7 @@ proxy_buffer_size 4k;
 proxy_buffers 8 4k;
 proxy_busy_buffers_size 8k;
 client_body_buffer_size 128k;
-```
+```text
 
 - **Purpose**: Optimize memory usage
 - **TUS PATCH**: Buffering disabled for upload endpoint
@@ -125,7 +125,7 @@ client_body_buffer_size 128k;
 # For TUS PATCH requests
 proxy_request_buffering off;
 proxy_buffering off;
-```
+```text
 
 - **Purpose**: Stream TUS PATCH requests directly
 - **Why critical**: TUS protocol requires streaming uploads
@@ -139,7 +139,7 @@ proxy_set_header Upload-Offset "";
 proxy_set_header Upload-Length "";
 proxy_set_header Upload-Metadata "";
 proxy_set_header Tus-Version "1.0.0";
-```
+```text
 
 - **Purpose**: Pass TUS protocol headers to FastUpload
 - **Required**: By TUS protocol specification
@@ -152,7 +152,7 @@ upstream fastupload {
     server 127.0.0.1:3003;
     keepalive 64;
 }
-```
+```text
 
 - **127.0.0.1**: Localhost (FastUpload runs on same server)
 - **3003**: Port from `.env` (`PORT=3003`)
@@ -166,7 +166,7 @@ add_header X-Content-Type-Options "nosniff" always;
 add_header X-XSS-Protection "1; mode=block" always;
 add_header Referrer-Policy "no-referrer-when-downgrade" always;
 add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-```
+```text
 
 - **Purpose**: Prevent clickjacking, XSS, and other attacks
 - **Always**: Apply to all responses
@@ -179,7 +179,7 @@ gzip_vary on;
 gzip_comp_level 6;
 gzip_types text/plain text/css text/xml text/javascript
            application/json application/javascript application/xml+rss;
-```
+```text
 
 - **Purpose**: Compress text responses
 - **Benefit**: Faster page loads, less bandwidth
@@ -198,7 +198,7 @@ sudo apt install certbot python3-certbot-nginx
 
 # CentOS/RHEL
 sudo yum install certbot python3-certbot-nginx
-```
+```text
 
 #### 2. Obtain SSL Certificate
 
@@ -211,7 +211,7 @@ sudo certbot --nginx -d your-domain.com -d www.your-domain.com
 # 2. Agree to Terms of Service
 # 3. Share email with EFF (optional)
 # 4. Choose: Redirect HTTP to HTTPS (recommended)
-```
+```text
 
 Certbot will automatically:
 
@@ -229,7 +229,7 @@ sudo nginx -t
 # Test SSL (use online tool)
 # Visit: https://www.ssllabs.com/ssltest/
 # Enter: your-domain.com
-```
+```text
 
 #### 4. Verify Auto-Renewal
 
@@ -239,7 +239,7 @@ sudo certbot renew --dry-run
 
 # Check renewal timer
 sudo systemctl status certbot.timer
-```
+```text
 
 ### Manual HTTPS Configuration
 
@@ -274,7 +274,7 @@ server {
     # HSTS
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 }
-```
+```text
 
 #### 2. Enable HTTP to HTTPS Redirect
 
@@ -288,14 +288,14 @@ server {
 
     return 301 https://$server_name$request_uri;
 }
-```
+```text
 
 #### 3. Test and Reload
 
 ```bash
 sudo nginx -t
 sudo systemctl reload nginx
-```
+```text
 
 ## Performance Tuning
 
@@ -309,7 +309,7 @@ worker_connections 4096;
 events {
     use epoll;
 }
-```
+```text
 
 ### 2. File Upload Module (Optional)
 
@@ -323,7 +323,7 @@ sudo apt install nginx-extras
 client_max_body_size 50G;
 client_body_in_file_only on;
 client_body_temp_path /var/nginx/tmp;
-```
+```text
 
 **Note**: Not recommended for TUS protocol (use FastUpload instead).
 
@@ -338,14 +338,14 @@ limit_req_zone $binary_remote_addr zone=upload:10m rate=10r/s;
 # Add in server context
 limit_req zone=upload burst=20 nodelay;
 limit_req_status 429;
-```
+```text
 
 ### 4. Connection Keep-Alive
 
 ```nginx
 keepalive_timeout 65;
 keepalive_requests 100;
-```
+```text
 
 ## Monitoring
 
@@ -357,7 +357,7 @@ tail -f /var/log/nginx/fastupload_access.log
 
 # Error logs
 tail -f /var/log/nginx/fastupload_error.log
-```
+```text
 
 ### 2. Health Check
 
@@ -367,7 +367,7 @@ The configuration includes a health check endpoint:
 # Test health check
 curl http://your-domain.com/health
 # Should return: OK
-```
+```text
 
 ### 3. Monitor Uploads
 
@@ -379,7 +379,7 @@ sudo journalctl -u fastupload -f
 
 # Or if running manually
 tail -f /path/to/fastupload/logs/fastupload.log
-```
+```text
 
 ## Troubleshooting
 
@@ -402,7 +402,7 @@ sudo nano /etc/nginx/sites-available/fastupload
 
 # Reload Nginx
 sudo systemctl reload nginx
-```
+```text
 
 ### Problem: 504 Gateway Timeout
 
@@ -425,7 +425,7 @@ sudo nano /etc/nginx/sites-available/fastupload
 
 # Reload Nginx
 sudo systemctl reload nginx
-```
+```text
 
 ### Problem: Uploads Can't Resume
 
@@ -453,7 +453,7 @@ location /upload {
 
 # Reload Nginx
 sudo systemctl reload nginx
-```
+```text
 
 ### Problem: CORS Errors
 
@@ -474,7 +474,7 @@ add_header 'Access-Control-Allow-Headers' 'Content-Type, Upload-Offset, Tus-Resu
 
 # Reload Nginx
 sudo systemctl reload nginx
-```
+```text
 
 ### Problem: 502 Bad Gateway
 
@@ -497,7 +497,7 @@ sudo systemctl restart fastupload
 
 # Check Nginx error log
 sudo tail -f /var/log/nginx/fastupload_error.log
-```
+```text
 
 ### Problem: Domain Not Resolving
 
@@ -524,7 +524,7 @@ ping your-domain.com
 # 4. Test Nginx configuration
 sudo nginx -t
 sudo systemctl reload nginx
-```
+```text
 
 ### Problem: HTTP Works but HTTPS Doesn't
 
@@ -554,7 +554,7 @@ sudo ufw status
 
 # 5. Test HTTPS
 curl -I https://your-domain.com
-```
+```text
 
 ### Problem: Configuration Test Fails
 
@@ -585,7 +585,7 @@ sudo nginx -t
 
 # Reload if test passes
 sudo systemctl reload nginx
-```
+```text
 
 ## Advanced Configuration
 
@@ -605,7 +605,7 @@ upstream fastupload {
 
     keepalive 64;
 }
-```
+```text
 
 ### 2. Caching
 
@@ -619,7 +619,7 @@ location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2)$ {
     add_header Cache-Control "public, immutable";
     access_log off;
 }
-```
+```text
 
 ### 3. GeoIP Blocking
 
@@ -631,14 +631,14 @@ sudo apt install geoip-bin geoip-database
 
 # Add in http context
 geoip_country /usr/share/GeoIP/GeoIP.dat;
-```
+```text
 
 ```nginx
 # Block specific countries
 if ($geoip_country_code ~ (RU|CN|KP)) {
     return 403;
 }
-```
+```text
 
 ### 4. IP Whitelisting
 
@@ -649,7 +649,7 @@ Allow only specific IP addresses:
 allow 1.2.3.4;
 allow 5.6.7.8;
 deny all;
-```
+```text
 
 ### 5. Rate Limiting by IP
 
@@ -661,7 +661,7 @@ limit_req_zone $binary_remote_addr zone=api:10m rate=100r/m;
 
 # In server context
 limit_req zone=api burst=50 nodelay;
-```
+```text
 
 ## Security Best Practices
 
@@ -670,13 +670,13 @@ limit_req zone=api burst=50 nodelay;
 ```nginx
 # In http context
 server_tokens off;
-```
+```text
 
 ### 2. Limit Request Size
 
 ```nginx
 client_max_body_size 50G;  # Set appropriately
-```
+```text
 
 ### 3. Timeout Settings
 
@@ -684,7 +684,7 @@ client_max_body_size 50G;  # Set appropriately
 # Don't set too high (prevents DoS)
 client_body_timeout 300s;
 client_header_timeout 300s;
-```
+```text
 
 ### 4. Disable Unnecessary Modules
 
@@ -694,14 +694,14 @@ Comment out unused modules in `nginx.conf`:
 # Example: disable unused modules
 # --without-http_uwsgi_module
 # --without-http_scgi_module
-```
+```text
 
 ### 5. Use HTTPS in Production
 
 ```nginx
 # Force HTTPS
 add_header Strict-Transport-Security "max-age=31536000" always;
-```
+```text
 
 ### 6. Regular Updates
 
@@ -709,7 +709,7 @@ add_header Strict-Transport-Security "max-age=31536000" always;
 # Update Nginx regularly
 sudo apt update
 sudo apt upgrade nginx
-```
+```text
 
 ## Performance Monitoring
 
@@ -724,13 +724,13 @@ location /nginx_status {
     allow 127.0.0.1;
     deny all;
 }
-```
+```text
 
 Access stats:
 
 ```bash
 curl http://localhost/nginx_status
-```
+```text
 
 ### 2. Real-Time Monitoring
 
@@ -740,7 +740,7 @@ sudo tail -f /var/log/nginx/access.log
 
 # Monitor errors
 sudo tail -f /var/log/nginx/error.log
-```
+```text
 
 ### 3. Log Analysis
 
@@ -759,7 +759,7 @@ sudo cp -r /etc/nginx /backup/nginx-$(date +%Y%m%d)
 
 # Backup FastUpload config
 cp /path/to/fastupload/.env /backup/.env-$(date +%Y%m%d)
-```
+```text
 
 ### 2. Restore Configuration
 
@@ -772,7 +772,7 @@ sudo nginx -t
 
 # Reload Nginx
 sudo systemctl reload nginx
-```
+```text
 
 ## Summary
 

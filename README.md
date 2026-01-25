@@ -64,14 +64,14 @@ brew install pnpm
 
 # Or using the standalone script
 curl -fsSL https://get.pnpm.io/install.sh | sh -
-```
+```text
 
 ### Install Dependencies
 
 ```bash
 # Install dependencies
 pnpm install
-```
+```text
 
 ## Usage
 
@@ -92,7 +92,7 @@ HOST=10.8.0.1 pnpm start
 
 # Or specify both
 HOST=10.8.0.1 PORT=8080 pnpm start
-```
+```text
 
 The server will start at `http://localhost:3000` by default.
 
@@ -145,7 +145,7 @@ const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 const MAX_FILE_SIZE = 50 * 1024 * 1024 * 1024; // 50GB
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 3000;
-```
+```text
 
 ### Environment Variables (.env)
 
@@ -157,7 +157,7 @@ cp .env.example .env
 
 # Edit .env with your configuration
 nano .env
-```
+```text
 
 **Example .env file**:
 
@@ -167,7 +167,7 @@ HOST=0.0.0.0
 
 # Server port
 PORT=3000
-```
+```text
 
 **HOST Options**:
 
@@ -180,7 +180,7 @@ PORT=3000
 
 ```javascript
 const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB chunks
-```
+```text
 
 Recommended chunk sizes based on network:
 
@@ -231,12 +231,12 @@ Recommended chunk sizes based on network:
 
 Uploaded files are stored in the `uploads/` directory:
 
-```
+```text
 uploads/
 ├── 1737824567890-myfile.txt    # Uploaded files
 ├── 1737824567891-largefile.mp4
 └── ...
-```
+```text
 
 Each file is named with: `{timestamp}-{original-filename}.{extension}`
 
@@ -323,7 +323,7 @@ module.exports = {
     }
   }]
 };
-```
+```text
 
 ## License
 
