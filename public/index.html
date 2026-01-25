@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastUpload - Resumable Large File Upload</title>
+  <script src="https://cdn.jsdelivr.net/npm/tus-js-client@3.1.3/dist/tus.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .upload-zone {
+      border: 3px dashed #ddd;
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: #fafafa;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+
+    .upload-zone p {
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .upload-zone .hint {
+      font-size: 14px;
+      color: #999;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-list {
+      margin-top: 30px;
+    }
+
+    .upload-item {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+
+    .upload-item h3 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .upload-item .file-info {
+      display: flex;
+      justify-content: space-between;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .progress-container {
+      margin-bottom: 10px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.3s;
+      border-radius: 4px;
+    }
+
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status.uploading {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .status.paused {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+
+    .status.completed {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+
+    .status.error {
+      background: #ffebee;
+      color: #d32f2f;
+    }
+
+    .actions {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-danger {
+      background: #ff5252;
+      color: white;
+    }
+
+    .chunk-info {
+      font-size: 12px;
+      color: #999;
+      margin-top: 5px;
+    }
+
+    .speed {
+      color: #667eea;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 FastUpload</h1>
+    <p class="subtitle">Upload large files (up to 50GB) with chunking & resume</p>
+
+    <div class="upload-zone" id="dropZone">
+      <p>Drag & drop files here or click to browse</p>
+      <p class="hint">Supports resumable uploads - continue if interrupted!</p>
+      <input type="file" id="fileInput" multiple>
+    </div>
+
+    <div class="upload-list" id="uploadList"></div>
+  </div>
+
+  <script>
+    const TUS_ENDPOINT = '/upload';
+    const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB chunks (optimal for most networks)
+    
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadList = document.getElementById('uploadList');
+
+    // Storage for active uploads
+    const activeUploads = new Map();
+
+    // Drag and drop handlers
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+      Array.from(files).forEach(file => {
+        startUpload(file);
+      });
+    }
+
+    function startUpload(file) {
+      const uploadId = `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      const uploadItem = createUploadItem(uploadId, file);
+      uploadList.appendChild(uploadItem);
+
+      const upload = new tus.Upload(file, {
+        endpoint: TUS_ENDPOINT,
+        chunkSize: CHUNK_SIZE,
+        retryDelays: [0, 1000, 3000, 5000],
+        metadata: {
+          filename: file.name,
+          filetype: file.type,
+        },
+        
+        onStart() {
+          updateStatus(uploadId, 'uploading');
+        },
+        
+        onProgress(bytesUploaded, bytesTotal) {
+          const percentage = (bytesUploaded / bytesTotal * 100).toFixed(2);
+          const uploaded = formatSize(bytesUploaded);
+          const total = formatSize(bytesTotal);
+          updateProgress(uploadId, percentage, uploaded, total);
+        },
+        
+        onChunkComplete(chunkSize, bytesUploaded, bytesTotal) {
+          const uploaded = formatSize(bytesUploaded);
+          const total = formatSize(bytesTotal);
+          const chunks = Math.ceil(bytesUploaded / CHUNK_SIZE);
+          const totalChunks = Math.ceil(bytesTotal / CHUNK_SIZE);
+          updateChunkInfo(uploadId, `Chunk ${chunks}/${totalChunks} completed`);
+          
+          // Calculate speed
+          const upload = activeUploads.get(uploadId);
+          if (upload) {
+            const elapsed = (Date.now() - upload.startTime) / 1000;
+            const speed = bytesUploaded / elapsed;
+            updateSpeed(uploadId, formatSize(speed) + '/s');
+            
+            // Estimate remaining time
+            const remaining = bytesTotal - bytesUploaded;
+            const eta = remaining / speed;
+            updateETA(uploadId, formatTime(eta) + ' remaining');
+          }
+        },
+        
+        onSuccess() {
+          updateStatus(uploadId, 'completed');
+          const upload = activeUploads.get(uploadId);
+          if (upload) {
+            const elapsed = (Date.now() - upload.startTime) / 1000;
+            updateChunkInfo(uploadId, `Completed in ${formatTime(elapsed)}`);
+          }
+          updateActions(uploadId, false, true);
+        },
+        
+        onError(error) {
+          console.error('Upload error:', error);
+          updateStatus(uploadId, 'error', error.message);
+          updateActions(uploadId, true, false);
+        }
+      });
+
+      // Store upload reference
+      activeUploads.set(uploadId, {
+        upload: upload,
+        startTime: Date.now()
+      });
+
+      // Check for previous upload to resume
+      upload.findPreviousUploads().then((previousUploads) => {
+        if (previousUploads.length > 0) {
+          upload.resumeFromPreviousUpload(previousUploads[0]);
+          updateChunkInfo(uploadId, 'Resuming previous upload...');
+        }
+        upload.start();
+      });
+    }
+
+    function createUploadItem(uploadId, file) {
+      const div = document.createElement('div');
+      div.className = 'upload-item';
+      div.id = uploadId;
+      div.innerHTML = `
+        <h3>${file.name}</h3>
+        <div class="file-info">
+          <span>Size: ${formatSize(file.size)}</span>
+          <span class="status uploading">Uploading</span>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="progress-text">
+            <span class="percentage">0%</span>
+            <span class="size-info">0 / ${formatSize(file.size)}</span>
+          </div>
+        </div>
+        <div class="chunk-info"></div>
+        <div class="progress-text" style="margin-top: 10px;">
+          <span class="speed"></span>
+          <span class="eta"></span>
+        </div>
+        <div class="actions">
+          <button class="btn btn-secondary" onclick="pauseUpload('${uploadId}')">Pause</button>
+          <button class="btn btn-danger" onclick="cancelUpload('${uploadId}')">Cancel</button>
+        </div>
+      `;
+      return div;
+    }
+
+    function updateProgress(uploadId, percentage, uploaded, total) {
+      const item = document.getElementById(uploadId);
+      if (item) {
+        item.querySelector('.progress-fill').style.width = `${percentage}%`;
+        item.querySelector('.percentage').textContent = `${percentage}%`;
+        item.querySelector('.size-info').textContent = `${uploaded} / ${total}`;
+      }
+    }
+
+    function updateStatus(uploadId, status, message = '') {
+      const item = document.getElementById(uploadId);
+      if (item) {
+        const statusEl = item.querySelector('.status');
+        statusEl.className = `status ${status}`;
+        statusEl.textContent = status;
+        
+        if (message) {
+          const chunkInfo = item.querySelector('.chunk-info');
+          chunkInfo.textContent = message;
+          chunkInfo.style.color = '#d32f2f';
+        }
+      }
+    }
+
+    function updateChunkInfo(uploadId, message) {
+      const item = document.getElementById(uploadId);
+      if (item) {
+        const chunkInfo = item.querySelector('.chunk-info');
+        chunkInfo.textContent = message;
+        chunkInfo.style.color = '#999';
+      }
+    }
+
+    function updateSpeed(uploadId, speed) {
+      const item = document.getElementById(uploadId);
+      if (item) {
+        item.querySelector('.speed').textContent = speed;
+      }
+    }
+
+    function updateETA(uploadId, eta) {
+      const item = document.getElementById(uploadId);
+      if (item) {
+        item.querySelector('.eta').textContent = eta;
+      }
+    }
+
+    function updateActions(uploadId, showResume, showDone) {
+      const item = document.getElementById(uploadId);
+      if (item) {
+        const actions = item.querySelector('.actions');
+        if (showResume) {
+          actions.innerHTML = `
+            <button class="btn btn-primary" onclick="resumeUpload('${uploadId}')">Resume</button>
+            <button class="btn btn-danger" onclick="cancelUpload('${uploadId}')">Cancel</button>
+          `;
+        } else if (showDone) {
+          actions.innerHTML = `
+            <button class="btn btn-primary" onclick="location.reload()">Upload More</button>
+          `;
+        }
+      }
+    }
+
+    function pauseUpload(uploadId) {
+      const uploadData = activeUploads.get(uploadId);
+      if (uploadData) {
+        uploadData.upload.abort();
+        updateStatus(uploadId, 'paused');
+        updateActions(uploadId, true, false);
+      }
+    }
+
+    function resumeUpload(uploadId) {
+      const uploadData = activeUploads.get(uploadId);
+      if (uploadData) {
+        updateStatus(uploadId, 'uploading');
+        uploadData.upload.start();
+      }
+    }
+
+    function cancelUpload(uploadId) {
+      const uploadData = activeUploads.get(uploadId);
+      if (uploadData) {
+        uploadData.upload.abort();
+        const item = document.getElementById(uploadId);
+        item.remove();
+        activeUploads.delete(uploadId);
+      }
+    }
+
+    function formatSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    function formatTime(seconds) {
+      if (seconds < 60) return Math.round(seconds) + 's';
+      if (seconds < 3600) return Math.round(seconds / 60) + 'm ' + Math.round(seconds % 60) + 's';
+      const hours = Math.floor(seconds / 3600);
+      const mins = Math.round((seconds % 3600) / 60);
+      return hours + 'h ' + mins + 'm';
+    }
+  </script>
+</body>
+</html>
