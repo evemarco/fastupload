@@ -115,8 +115,11 @@ function generateSessionKey() {
 // Parse cookies before authentication middleware
 app.use(cookieParser());
 
-// Authentication check middleware
+// Parse JSON and URL-encoded bodies
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Authentication check middleware
 app.use((req, res, next) => {
   // Skip authentication check for login page
   if (req.path === '/login' || (req.path === '/api/login' && req.method === 'POST')) {
