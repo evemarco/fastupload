@@ -540,12 +540,30 @@
       if (uploadData) {
         uploadData.upload.abort();
         
-        // Delete the upload from the server if it exists
+        
+        // Delete upload from server if it exists
         if (uploadData.upload.url) {
           const uploadIdFromUrl = uploadData.upload.url.split('/').pop();
           fetch(`/upload/${uploadIdFromUrl}`, {
             method: 'DELETE'
-          }).catch(err => {
+          })
+          .then(response => {
+            // 412 Precondition Failed means upload was already completed/renamed
+            // This is normal, not an error
+            if (response.status === 412) {
+              console.log(`Upload ${uploadIdFromUrl} already completed on server`);
+              return;
+            }
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+          })
+          .catch(err => {
+            // Ignore 412 errors (upload already completed)
+            if (err.message && err.message.includes('412')) {
+              console.log(`Upload ${uploadIdFromUrl} already completed on server`);
+              return;
+            }
             console.warn('Failed to delete upload from server:', err);
           });
         }
