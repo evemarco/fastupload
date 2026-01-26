@@ -19,6 +19,7 @@ const MAX_FILE_SIZE = MAX_FILE_SIZE_GB * 1024 * 1024 * 1024;
 const ACCESS_KEY = process.env.ACCESS_KEY || '';
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 const CHUNK_SIZE_MB = parseInt(process.env.CHUNK_SIZE_MB || '50');
+const ADD_TIMESTAMP_TO_FILENAME = process.env.ADD_TIMESTAMP_TO_FILENAME !== 'false';
 
 // Clean up empty files and orphaned metadata on startup
 function cleanupUploads() {
@@ -357,9 +358,11 @@ const tusServer = new Server({
       const ext = getExtension(originalFilename);
       const baseName = getBaseFilename(originalFilename);
 
-      // Create new filename: original-name-timestamp.ext
+      // Create new filename: original-name-timestamp.ext (if enabled)
       const timestamp = Date.now();
-      const newFilename = `${baseName}-${timestamp}${ext}`;
+      const newFilename = ADD_TIMESTAMP_TO_FILENAME
+        ? `${baseName}-${timestamp}${ext}`
+        : `${baseName}${ext}`;
 
       const oldPath = path.join(UPLOAD_DIR, upload.id);
       const newPath = path.join(UPLOAD_DIR, newFilename);
