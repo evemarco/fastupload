@@ -385,6 +385,7 @@
           upload.resumeFromPreviousUpload(previousUploads[0]);
           updateChunkInfo(uploadId, 'Resuming previous upload...');
         }
+        upload.start(); // Start the upload (resume or new)
       });
     }
 
