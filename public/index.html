@@ -319,6 +319,13 @@
           // Calculate speed
           const upload = activeUploads.get(uploadId);
           if (upload) {
+            // Reset start time on resume to get accurate speed/ETA
+            // (bytesUploaded may include previously uploaded data)
+            if (!upload.startTimeReset && bytesUploaded > 0) {
+              upload.startTime = Date.now();
+              upload.startTimeReset = true;
+            }
+            
             const elapsed = (Date.now() - upload.startTime) / 1000;
             const speed = bytesUploaded / elapsed;
             updateSpeed(uploadId, formatSize(speed) + '/s');
@@ -356,6 +363,12 @@
       // Check for previous upload to resume
       upload.findPreviousUploads().then((previousUploads) => {
         if (previousUploads.length > 0) {
+          // Reset start time for resumed uploads to get accurate speed/ETA
+          activeUploads.set(uploadId, {
+            upload: upload,
+            startTime: Date.now(),
+            startTimeReset: false
+          });
           upload.resumeFromPreviousUpload(previousUploads[0]);
           updateChunkInfo(uploadId, 'Resuming previous upload...');
         }
