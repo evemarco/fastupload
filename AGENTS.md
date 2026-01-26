@@ -37,9 +37,23 @@ pnpm add -D <package> # Add dev dependency
 ```bash
 pnpm run lint         # Run ESLint on server.js and scripts
 pnpm run lint:fix     # Auto-fix linting issues
-pnpm run lint:html    # Lint HTML files with HTMLHint
+pnpm run lint:html    # Lint HTML files with HTMLHint + JS syntax validation
 pnpm run lint:md      # Lint Markdown files with markdownlint
 ```
+
+### JavaScript Syntax Validation in HTML
+
+```bash
+# Included in lint:html, validates JS in <script> tags
+node scripts/lint-html-js.js  # Direct JS syntax check
+```
+
+The `lint:html` command now includes `scripts/lint-html-js.js` which:
+
+- Extracts JavaScript from `<script>` tags in HTML
+- Validates JavaScript syntax
+- Reports syntax errors with line numbers
+- Fails if invalid syntax is found
 
 ### Access Key Management
 
@@ -200,12 +214,42 @@ No automated tests exist in this codebase.
 - **Query Parameter**: `?key=ACCESS_KEY` for direct URL access
 - **Public Access**: If `ACCESS_KEY` is empty, no authentication required
 
+### Recent Features and Fixes
+
+#### Speed/ETA Calculation (2026-01)
+
+- **Moved to onProgress**: Speed/ETA now calculated in real-time (not just chunk-end)
+- **Updated Every Second**: Not just every 50MB chunk
+- **Pause Time Exclusion**: Paused time doesn't affect speed calculation
+- **Implementation Details**:
+  - `pauseStartTime` tracks when pause started
+  - `totalPausedTime` tracks cumulative paused time
+  - `startTime` adjusted on resume to exclude paused time
+  - `elapsed = (now - startTime) / 1000` excludes paused time
+
+#### Partial Upload Management (2026-01)
+
+- **DELETE Endpoint**: Custom `DELETE /upload/:id` removes partial uploads
+- **Files Removed**: Both hash file and .json metadata file deleted
+- **Route Order Critical**: DELETE endpoint must be BEFORE TUS server mount
+- **Previous Upload Validation**: HEAD check before using partial uploads
+- **Orphaned Partial Detection**: Automatically rejects partials not on server
+
+#### Pause/Resume Behavior
+
+- **UI Updates**: Button correctly switches between Pause and Resume
+- **State Tracking**: `pauseStartTime` and `totalPausedTime` in activeUploads Map
+- **Speed Accuracy**: `startTime` adjusted to exclude paused time on resume
+- **Error Handling**: 412 (Precondition Failed) handled gracefully for completed uploads
+
 ### File Storage
 
 - **Renaming on Complete**: Files renamed from hash IDs to human-readable names on upload finish
 - **Cleanup on Startup**: Empty files and orphaned .json files are auto-deleted
 - **Metadata Files**: Each file has `.json` metadata with original filename
-- **Partial Uploads**: Incomplete uploads remain until manually deleted or resumed
+- **Partial Uploads**: Incomplete uploads can be resumed or deleted
+- **DELETE Endpoint**: Custom `DELETE /upload/:id` removes partial uploads (hash + .json)
+- **Route Order**: DELETE endpoint must be mounted before TUS server
 
 ### Linting
 
@@ -218,6 +262,10 @@ No automated tests exist in this codebase.
 - **No Build Process**: Direct HTML/JS editing, refresh browser to see changes
 - **CDN Dependency**: Uses `https://cdn.jsdelivr.net/npm/tus-js-client@3.1.3/dist/tus.min.js`
 - **Chunk Size Sync**: Client loads chunk size from `/api/config` endpoint
+- **Speed/ETA Calculation**: In `onProgress` callback (real-time updates, not chunk-end)
+- **Pause/Resume Tracking**: Stores `pauseStartTime` and `totalPausedTime` in upload data
+- **Previous Upload Validation**: HEAD check before using partial uploads
+- **Delete Handling**: Proper response parsing and error handling for 412/404 responses
 
 ### Development Workflow
 

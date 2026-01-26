@@ -4,12 +4,15 @@ A web-based file upload system optimized for large files (up to 50GB) with chunk
 
 ## Features
 
-✅ **Chunked Uploads** - Files are split into 50MB chunks for efficient upload  
-✅ **Resume Capability** - Continue interrupted uploads from where they left off  
-✅ **Progress Tracking** - Real-time progress display with speed and ETA  
-✅ **Memory Efficient** - Streams files without loading into memory  
-✅ **Parallel Uploads** - Upload multiple files simultaneously  
-✅ **TUS Protocol** - Uses industry-standard TUS resumable upload protocol  
+✅ **Chunked Uploads** - Files are split into 50MB chunks for efficient upload
+✅ **Resume Capability** - Continue interrupted uploads from where they left off
+✅ **Progress Tracking** - Real-time progress display with speed and ETA
+✅ **Pause/Resume** - Pause uploads mid-progress and resume anytime
+✅ **Partial Upload Cleanup** - Delete incomplete uploads from server
+✅ **Speed Calculation** - Accurate speed/ETA excluding paused time
+✅ **Memory Efficient** - Streams files without loading into memory
+✅ **Parallel Uploads** - Upload multiple files simultaneously
+✅ **TUS Protocol** - Uses industry-standard TUS resumable upload protocol
 ✅ **Web Interface** - Beautiful, drag-and-drop interface  
 
 ## Technology Stack
