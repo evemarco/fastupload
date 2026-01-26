@@ -539,35 +539,29 @@
       const uploadData = activeUploads.get(uploadId);
       if (uploadData) {
         uploadData.upload.abort();
-        
-        
+
         // Delete upload from server if it exists
         if (uploadData.upload.url) {
           const uploadIdFromUrl = uploadData.upload.url.split('/').pop();
           fetch(`/upload/${uploadIdFromUrl}`, {
-            method: 'DELETE'
+            method: 'DELETE',
           })
-          .then(response => {
-            // 412 Precondition Failed means upload was already completed/renamed
-            // This is normal, not an error
-            if (response.status === 412) {
-              console.log(`Upload ${uploadIdFromUrl} already completed on server`);
-              return;
-            }
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}`);
-            }
-          })
-          .catch(err => {
-            // Ignore 412 errors (upload already completed)
-            if (err.message && err.message.includes('412')) {
-              console.log(`Upload ${uploadIdFromUrl} already completed on server`);
-              return;
-            }
-            console.warn('Failed to delete upload from server:', err);
-          });
+            .then(async (response) => {
+              if (!response.ok) {
+                const result = await response.json();
+                // 404 is normal for completed uploads (already renamed)
+                if (response.status === 404) {
+                  console.log(`Upload ${uploadIdFromUrl} not found (might be completed)`);
+                } else {
+                  console.warn('Failed to delete upload from server:', result.message || `HTTP ${response.status}`);
+                }
+              }
+            })
+            .catch(err => {
+              console.warn('Failed to delete upload from server:', err);
+            });
         }
-        
+
         const item = document.getElementById(uploadId);
         if (item) {
           item.remove();
@@ -734,18 +728,23 @@
       }
 
       try {
-        await fetch(`/upload/${uploadId}`, {
+        const response = await fetch(`/upload/${uploadId}`, {
           method: 'DELETE'
         });
+        const result = await response.json();
 
-        // Remove from UI
-        const item = document.getElementById(uploadItemId);
-        if (item) {
-          item.remove();
+        // Only show success message if server confirmed deletion
+        if (result.success) {
+          // Remove from UI
+          const item = document.getElementById(uploadItemId);
+          if (item) {
+            item.remove();
+          }
+          activeUploads.delete(uploadItemId);
+          console.log(`Partial upload ${uploadId} deleted:`, result.deletedFiles?.join(', '));
+        } else {
+          console.log(`Partial upload ${uploadId} not found:`, result.message);
         }
-        activeUploads.delete(uploadItemId);
-
-        console.log(`Partial upload ${uploadId} deleted`);
       } catch (error) {
         console.error('Error deleting partial upload:', error);
         alert('Failed to delete partial upload');
