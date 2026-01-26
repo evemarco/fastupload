@@ -386,7 +386,59 @@ const tusServer = new Server({
   },
 });
 
-// Mount TUS server
+// Endpoint to delete partial uploads (must be before TUS mount)
+app.delete('/upload/:id', (req, res) => {
+  try {
+    const uploadId = req.params.id;
+    const hashFilePath = path.join(UPLOAD_DIR, uploadId);
+    const jsonFilePath = path.join(UPLOAD_DIR, `${uploadId}.json`);
+
+    let deleted = false;
+    const deletedFiles = [];
+
+    // Try to delete hash file (if still exists)
+    if (fs.existsSync(hashFilePath)) {
+      const stats = fs.statSync(hashFilePath);
+      if (stats.isFile()) {
+        fs.unlinkSync(hashFilePath);
+        deletedFiles.push(`${uploadId} (hash file)`);
+        deleted = true;
+      }
+    }
+
+    // Try to delete JSON metadata file (if still exists)
+    if (fs.existsSync(jsonFilePath)) {
+      fs.unlinkSync(jsonFilePath);
+      deletedFiles.push(`${uploadId}.json (metadata)`);
+      deleted = true;
+    }
+
+    if (deleted) {
+      console.log('Deleted partial upload files:', deletedFiles.join(', '));
+      return res.status(200).json({
+        success: true,
+        message: 'Partial upload deleted',
+        deletedFiles: deletedFiles,
+      });
+    } else {
+      // File not found - might have been completed and renamed already
+      console.log(`Partial upload ${uploadId} not found (might be completed already)`);
+      return res.status(404).json({
+        success: false,
+        message: 'Partial upload not found (might be completed)',
+      });
+    }
+  } catch (error) {
+    console.error(`Error deleting partial upload ${req.params.id}:`, error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Error deleting partial upload',
+      error: error.message,
+    });
+  }
+});
+
+// Mount TUS server (DELETE endpoint must be before this)
 app.use('/upload', tusServer.handle.bind(tusServer));
 
 // Endpoint to get server configuration
@@ -540,57 +592,6 @@ app.get('/api/uploads/:id/status', (req, res) => {
   });
 });
 
-// Endpoint to delete partial uploads
-app.delete('/upload/:id', (req, res) => {
-  try {
-    const uploadId = req.params.id;
-    const hashFilePath = path.join(UPLOAD_DIR, uploadId);
-    const jsonFilePath = path.join(UPLOAD_DIR, `${uploadId}.json`);
-
-    let deleted = false;
-    const deletedFiles = [];
-
-    // Try to delete hash file (if still exists)
-    if (fs.existsSync(hashFilePath)) {
-      const stats = fs.statSync(hashFilePath);
-      if (stats.isFile()) {
-        fs.unlinkSync(hashFilePath);
-        deletedFiles.push(`${uploadId} (hash file)`);
-        deleted = true;
-      }
-    }
-
-    // Try to delete JSON metadata file (if still exists)
-    if (fs.existsSync(jsonFilePath)) {
-      fs.unlinkSync(jsonFilePath);
-      deletedFiles.push(`${uploadId}.json (metadata)`);
-      deleted = true;
-    }
-
-    if (deleted) {
-      console.log('Deleted partial upload files:', deletedFiles.join(', '));
-      return res.status(200).json({
-        success: true,
-        message: 'Partial upload deleted',
-        deletedFiles: deletedFiles,
-      });
-    } else {
-      // File not found - might have been completed and renamed already
-      console.log(`Partial upload ${uploadId} not found (might be completed already)`);
-      return res.status(404).json({
-        success: false,
-        message: 'Partial upload not found (might be completed)',
-      });
-    }
-  } catch (error) {
-    console.error(`Error deleting partial upload ${req.params.id}:`, error.message);
-    return res.status(500).json({
-      success: false,
-      message: 'Error deleting partial upload',
-      error: error.message,
-    });
-  }
-});
 
 app.listen(PORT, HOST, () => {
   const displayHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
