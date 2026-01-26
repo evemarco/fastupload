@@ -10,7 +10,7 @@
     "generate-key": "node scripts/generate-key.js",
     "lint": "eslint server.js scripts/generate-key.js",
     "lint:fix": "eslint server.js scripts/generate-key.js --fix",
-    "lint:html": "npx htmlhint public/index.html",
+    "lint:html": "npx htmlhint public/index.html && node scripts/lint-html-js.js",
     "lint:md": "npx markdownlint *.md --fix",
     "preinstall": "npx only-allow pnpm"
   },
