@@ -307,22 +307,13 @@
           const uploaded = formatSize(bytesUploaded);
           const total = formatSize(bytesTotal);
           updateProgress(uploadId, percentage, uploaded, total);
-        },
-        
-        onChunkComplete(chunkSize, bytesUploaded, bytesTotal) {
-          const uploaded = formatSize(bytesUploaded);
-          const total = formatSize(bytesTotal);
-          const chunks = Math.ceil(bytesUploaded / CHUNK_SIZE);
-          const totalChunks = Math.ceil(bytesTotal / CHUNK_SIZE);
-          updateChunkInfo(uploadId, `Chunk ${chunks}/${totalChunks} completed`);
           
-          // Calculate speed
+          // Calculate speed and ETA in real-time
           const upload = activeUploads.get(uploadId);
           if (upload) {
             const elapsed = (Date.now() - upload.startTime) / 1000;
             
             // Calculate speed based on NEW data uploaded since start/resume
-            // bytesUploaded is cumulative, so subtract initialBytes
             const bytesSinceStart = bytesUploaded - upload.initialBytes;
             
             // Only calculate/display speed after some time has passed (1 second)
@@ -337,6 +328,14 @@
               updateETA(uploadId, formatTime(eta) + ' remaining');
             }
           }
+        },
+        
+        onChunkComplete(chunkSize, bytesUploaded, bytesTotal) {
+          const uploaded = formatSize(bytesUploaded);
+          const total = formatSize(bytesTotal);
+          const chunks = Math.ceil(bytesUploaded / CHUNK_SIZE);
+          const totalChunks = Math.ceil(bytesTotal / CHUNK_SIZE);
+          updateChunkInfo(uploadId, `Chunk ${chunks}/${totalChunks} completed`);
         },
         
         onSuccess() {
