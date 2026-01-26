@@ -371,7 +371,9 @@
         activeUploads.set(uploadId, {
           upload: upload,
           startTime: Date.now(),
-          initialBytes: initialBytes
+          initialBytes: initialBytes,
+          pauseStartTime: null, // Track when pause started
+          totalPausedTime: 0 // Track total time spent paused
         });
         
         upload.start(); // Start the upload
@@ -470,6 +472,12 @@
           actions.innerHTML = `
             <button class="btn btn-primary" onclick="location.reload()">Upload More</button>
           `;
+        } else {
+          // Show default Pause and Cancel buttons
+          actions.innerHTML = `
+            <button class="btn btn-secondary" onclick="pauseUpload('${uploadId}')">Pause</button>
+            <button class="btn btn-danger" onclick="cancelUpload('${uploadId}')">Cancel</button>
+          `;
         }
       }
     }
@@ -478,6 +486,7 @@
       const uploadData = activeUploads.get(uploadId);
       if (uploadData) {
         uploadData.upload.abort();
+        uploadData.pauseStartTime = Date.now(); // Record when pause started
         updateStatus(uploadId, 'paused');
         updateActions(uploadId, true, false);
       }
@@ -486,8 +495,22 @@
     function resumeUpload(uploadId) {
       const uploadData = activeUploads.get(uploadId);
       if (uploadData) {
+        // Calculate time spent in pause
+        if (uploadData.pauseStartTime) {
+          const pauseDuration = Date.now() - uploadData.pauseStartTime;
+          uploadData.totalPausedTime += pauseDuration;
+          uploadData.pauseStartTime = null;
+          
+          // Adjust startTime to exclude paused time
+          // This ensures speed calculation is accurate
+          uploadData.startTime += pauseDuration;
+        }
+        
         updateStatus(uploadId, 'uploading');
         uploadData.upload.start();
+        
+        // Update actions to show Pause button instead of Resume
+        updateActions(uploadId, false, false);
       }
     }
 
