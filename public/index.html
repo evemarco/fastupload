@@ -319,21 +319,31 @@
           // Calculate speed
           const upload = activeUploads.get(uploadId);
           if (upload) {
-            // Reset start time on resume to get accurate speed/ETA
-            // (bytesUploaded may include previously uploaded data)
-            if (!upload.startTimeReset && bytesUploaded > 0) {
-              upload.startTime = Date.now();
-              upload.startTimeReset = true;
+            // On first chunk after resume, capture the starting offset
+            // This ensures speed is calculated only on NEW uploaded data
+            if (upload.initialBytes === null && bytesUploaded > 0) {
+              upload.initialBytes = bytesUploaded;
+              upload.startTime = Date.now(); // Reset start time
             }
             
-            const elapsed = (Date.now() - upload.startTime) / 1000;
-            const speed = bytesUploaded / elapsed;
-            updateSpeed(uploadId, formatSize(speed) + '/s');
+            // Calculate speed based on NEW data uploaded since resume
+            // Not cumulative total (which includes previous uploads)
+            const bytesSinceResume = upload.initialBytes !== null 
+              ? bytesUploaded - upload.initialBytes 
+              : bytesUploaded;
             
-            // Estimate remaining time
-            const remaining = bytesTotal - bytesUploaded;
-            const eta = remaining / speed;
-            updateETA(uploadId, formatTime(eta) + ' remaining');
+            const elapsed = (Date.now() - upload.startTime) / 1000;
+            
+            // Only calculate speed if we have actual progress
+            if (elapsed > 0.1 && bytesSinceResume > 0) {
+              const speed = bytesSinceResume / elapsed;
+              updateSpeed(uploadId, formatSize(speed) + '/s');
+              
+              // Estimate remaining time
+              const remaining = bytesTotal - bytesUploaded;
+              const eta = remaining / speed;
+              updateETA(uploadId, formatTime(eta) + ' remaining');
+            }
           }
         },
         
@@ -363,16 +373,18 @@
       // Check for previous upload to resume
       upload.findPreviousUploads().then((previousUploads) => {
         if (previousUploads.length > 0) {
-          // Reset start time for resumed uploads to get accurate speed/ETA
+          // For accurate speed/ETA calculation on resume:
+          // Store starting bytes to calculate speed only on NEW data
+          // bytesUploaded from TUS is cumulative (includes previous uploads)
+          // We'll capture initialBytes on first chunk in onChunkComplete
           activeUploads.set(uploadId, {
             upload: upload,
             startTime: Date.now(),
-            startTimeReset: false
+            initialBytes: null // Will be set on first chunk
           });
           upload.resumeFromPreviousUpload(previousUploads[0]);
           updateChunkInfo(uploadId, 'Resuming previous upload...');
         }
-        upload.start();
       });
     }
 
