@@ -10,17 +10,35 @@ Files are renamed automatically when upload completes using this format:
 
 ```text
 original-name-timestamp.extension
-```text
+```
+
+**Note:** The timestamp can be disabled via `.env` configuration (see below).
 
 ### Example
 
 If you upload `my-document.pdf`:
 
-```text
+```
 uploads/
 ├── my-document-1706159234567.pdf
 └── my-document-1706159234567.pdf.json
-```text
+```
+
+### Controlling Timestamp Behavior
+
+You can control whether timestamps are added to filenames via `.env` file:
+
+```bash
+# Add timestamp (default) - prevents overwrites
+ADD_TIMESTAMP_TO_FILENAME=true
+# Result: my-document-1706159234567.pdf
+
+# No timestamp - keeps original filename
+ADD_TIMESTAMP_TO_FILENAME=false
+# Result: my-document.pdf
+```
+
+**Important:** Setting `ADD_TIMESTAMP_TO_FILENAME=false` may cause files to overwrite if the same filename is uploaded multiple times. Recommended to keep `true` for production environments.
 
 ### Why the Timestamp?
 
