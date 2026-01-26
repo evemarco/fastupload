@@ -396,10 +396,11 @@
           pauseStartTime: null, // Track when pause started
           totalPausedTime: 0 // Track total time spent paused
         });
+
         
         upload.start(); // Start upload
       });
-
+    }
     function createUploadItem(uploadId, file) {
       const div = document.createElement('div');
       div.className = 'upload-item';
