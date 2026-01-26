@@ -356,15 +356,36 @@
       });
 
       // Check for previous upload to resume
-      upload.findPreviousUploads().then((previousUploads) => {
+      upload.findPreviousUploads().then(async (previousUploads) => {
         let initialBytes = 0; // Default for new uploads
+        let validPreviousUpload = null;
         
         if (previousUploads.length > 0) {
-          // For accurate speed/ETA calculation on resume:
-          // Store the offset of previous upload to calculate speed only on NEW data
-          initialBytes = previousUploads[0].offset;
-          upload.resumeFromPreviousUpload(previousUploads[0]);
-          updateChunkInfo(uploadId, 'Resuming previous upload...');
+          const prevUpload = previousUploads[0];
+          
+          // Check if previous upload still exists on server
+          try {
+            const response = await fetch(prevUpload.uploadUrl, {
+              method: 'HEAD'
+            });
+            
+            if (response.ok) {
+              // Previous upload exists, use it for resume
+              validPreviousUpload = prevUpload;
+              initialBytes = prevUpload.offset;
+              upload.resumeFromPreviousUpload(prevUpload);
+              updateChunkInfo(uploadId, 'Resuming previous upload...');
+            } else {
+              // Previous upload doesn't exist, start fresh
+              console.log('Previous partial upload not found on server, starting fresh');
+              updateChunkInfo(uploadId, 'Starting new upload (previous upload not found)');
+            }
+          } catch (error) {
+            // Error checking, start fresh
+            console.warn('Error checking previous upload:', error);
+            console.log('Starting new upload');
+            updateChunkInfo(uploadId, 'Starting new upload (check failed)');
+          }
         }
         
         // Store upload reference after determining if it's a resume
@@ -376,9 +397,8 @@
           totalPausedTime: 0 // Track total time spent paused
         });
         
-        upload.start(); // Start the upload
+        upload.start(); // Start upload
       });
-    }
 
     function createUploadItem(uploadId, file) {
       const div = document.createElement('div');
@@ -518,8 +538,21 @@
       const uploadData = activeUploads.get(uploadId);
       if (uploadData) {
         uploadData.upload.abort();
+        
+        // Delete the upload from the server if it exists
+        if (uploadData.upload.url) {
+          const uploadIdFromUrl = uploadData.upload.url.split('/').pop();
+          fetch(`/upload/${uploadIdFromUrl}`, {
+            method: 'DELETE'
+          }).catch(err => {
+            console.warn('Failed to delete upload from server:', err);
+          });
+        }
+        
         const item = document.getElementById(uploadId);
-        item.remove();
+        if (item) {
+          item.remove();
+        }
         activeUploads.delete(uploadId);
       }
     }
