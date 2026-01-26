@@ -135,7 +135,7 @@ app.use((req, res, next) => {
   if (isAuthenticated(req)) {
     // If authenticated via query parameter, set cookie for future requests
     const key = req.query.key;
-    if (key && key === ACCESS_KEY && !req.cookies?.fastupload_session) {
+    if (key && key === ACCESS_KEY) {
       const sessionKey = generateSessionKey();
       sessionStore.set(sessionKey, key);
       res.cookie('fastupload_session', sessionKey, {
