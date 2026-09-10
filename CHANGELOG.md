@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Folder uploads: drag & drop entire directories or use the "Choose Folder" picker (`webkitdirectory`)
+- Server-side directory structure recreation from `relativepath` TUS metadata, sanitized against path traversal (`..`, absolute paths, drive letters)
+- Upload queue with `MAX_PARALLEL_UPLOADS` concurrency limit (default 4, via `/api/config`)
+- Directory-grouped UI for large batches (one collapsible card per folder), materialized lazily — scales to 1000+ files
+- Batch controls: Pause All, Resume All, Cancel All, Clear Completed
+- Global batch progress with aggregate speed and ETA
+- `MAX_PARALLEL_UPLOADS` environment variable
+
+### Changed
+
+- `/api/uploads` and startup cleanup now walk subdirectories recursively; cleanup removes emptied directories
+- DOM updates throttled via requestAnimationFrame scheduler with background-tab fallback
+- File/folder names HTML-escaped in the UI (XSS hardening)
+
+### Dependencies
+
+- `@tus/server` 2.3.0 → 2.4.5, `@tus/file-store` 2.0.0 → 2.1.1
+- `eslint` 9 → 10, `@eslint/js` 10, `globals` 17.12, `htmlhint` 1.9.2, `dotenv` 17.4.2, `markdownlint-cli` 0.49.1, `only-allow` 1.2.2
+
 ## [1.0.0] - 2026-01-25
 
 ### Added

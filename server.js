@@ -19,48 +19,59 @@ const MAX_FILE_SIZE = MAX_FILE_SIZE_GB * 1024 * 1024 * 1024;
 const ACCESS_KEY = process.env.ACCESS_KEY || '';
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 const CHUNK_SIZE_MB = parseInt(process.env.CHUNK_SIZE_MB || '50');
+const MAX_PARALLEL_UPLOADS = parseInt(process.env.MAX_PARALLEL_UPLOADS || '4');
 const ADD_TIMESTAMP_TO_FILENAME = process.env.ADD_TIMESTAMP_TO_FILENAME !== 'false';
 
-// Clean up empty files and orphaned metadata on startup
-function cleanupUploads() {
+// Clean up empty files and orphaned metadata on startup (recursive)
+function cleanupUploads(dir = UPLOAD_DIR, deleted = []) {
   try {
-    const files = fs.readdirSync(UPLOAD_DIR);
-    const deleted = [];
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
 
-    files.forEach(filename => {
+    entries.forEach(entry => {
+      const filePath = path.join(dir, entry.name);
       try {
-        const filePath = path.join(UPLOAD_DIR, filename);
+        if (entry.isDirectory()) {
+          cleanupUploads(filePath, deleted);
+          // Remove directory if it became empty after cleanup
+          if (fs.readdirSync(filePath).length === 0) {
+            fs.rmdirSync(filePath);
+            deleted.push(`${path.relative(UPLOAD_DIR, filePath)}/`);
+          }
+          return;
+        }
+
+        const filename = entry.name;
         const stats = fs.statSync(filePath);
+        const relativeName = path.relative(UPLOAD_DIR, filePath);
 
         // Delete empty files
-        if (stats.isFile() && stats.size === 0 && !filename.endsWith('.json')) {
+        if (stats.size === 0 && !filename.endsWith('.json')) {
           fs.unlinkSync(filePath);
-          deleted.push(filename);
+          deleted.push(relativeName);
 
           // Also delete corresponding metadata file
-          const metadataPath = path.join(UPLOAD_DIR, `${filename}.json`);
+          const metadataPath = `${filePath}.json`;
           if (fs.existsSync(metadataPath)) {
             fs.unlinkSync(metadataPath);
-            deleted.push(`${filename}.json`);
+            deleted.push(`${relativeName}.json`);
           }
         }
 
         // Delete orphaned metadata files (no corresponding file)
         if (filename.endsWith('.json')) {
-          const baseFilename = filename.replace('.json', '');
-          const baseFilePath = path.join(UPLOAD_DIR, baseFilename);
+          const baseFilePath = filePath.replace(/\.json$/, '');
           if (!fs.existsSync(baseFilePath)) {
             fs.unlinkSync(filePath);
-            deleted.push(filename);
+            deleted.push(relativeName);
           }
         }
       } catch (error) {
         // Skip files that cause errors during cleanup
-        console.error(`Skipping ${filename} during cleanup:`, error.message);
+        console.error(`Skipping ${entry.name} during cleanup:`, error.message);
       }
     });
 
-    if (deleted.length > 0) {
+    if (dir === UPLOAD_DIR && deleted.length > 0) {
       console.log(`Cleaned up ${deleted.length} files: ${deleted.slice(0, 5).join(', ')}${deleted.length > 5 ? '...' : ''}`);
     }
   } catch (error) {
@@ -320,18 +331,35 @@ app.post('/api/login', (req, res) => {
   res.redirect('/');
 });
 
-// Helper function to get filename from metadata
-function getFilenameFromUpload(uploadId) {
+// Helper function to get metadata (filename + relative path) from upload
+function getMetadataFromUpload(uploadId) {
   try {
     const metadataPath = path.join(UPLOAD_DIR, `${uploadId}.json`);
     if (fs.existsSync(metadataPath)) {
       const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-      return metadata.metadata?.filename || uploadId;
+      return {
+        filename: metadata.metadata?.filename || uploadId,
+        relativePath: sanitizeRelativePath(metadata.metadata?.relativepath || ''),
+      };
     }
   } catch (error) {
     console.error(`Error reading metadata for ${uploadId}:`, error.message);
   }
-  return uploadId;
+  return { filename: uploadId, relativePath: '' };
+}
+
+// Sanitize a client-provided relative path:
+// - normalize separators
+// - drop empty segments, '.', '..' (prevents path traversal / escape from UPLOAD_DIR)
+// - drop leading root/drive markers
+function sanitizeRelativePath(relPath) {
+  if (!relPath || typeof relPath !== 'string') {
+    return '';
+  }
+  const parts = relPath
+    .split(/[\\/]+/)
+    .filter(seg => seg && seg !== '.' && seg !== '..' && /^[a-zA-Z]:$/.test(seg) === false);
+  return parts.join('/');
 }
 
 // Helper function to get file extension
@@ -354,7 +382,7 @@ const tusServer = new Server({
   respectForwardedHeaders: true,
   async onUploadFinish(req, upload) {
     try {
-      const originalFilename = getFilenameFromUpload(upload.id);
+      const { filename: originalFilename, relativePath } = getMetadataFromUpload(upload.id);
       const ext = getExtension(originalFilename);
       const baseName = getBaseFilename(originalFilename);
 
@@ -364,21 +392,36 @@ const tusServer = new Server({
         ? `${baseName}-${timestamp}${ext}`
         : `${baseName}${ext}`;
 
+      // Recreate the client-side directory structure inside UPLOAD_DIR
+      const relativeDir = path.dirname(relativePath);
+      const targetDir = relativeDir === '.' ? UPLOAD_DIR : path.join(UPLOAD_DIR, relativeDir);
+
+      // Defense in depth: targetDir must stay inside UPLOAD_DIR
+      if (path.resolve(targetDir) !== UPLOAD_DIR && !path.resolve(targetDir).startsWith(UPLOAD_DIR + path.sep)) {
+        console.error(`Rejected unsafe relative path "${relativePath}" for upload ${upload.id}`);
+        return;
+      }
+
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+
       const oldPath = path.join(UPLOAD_DIR, upload.id);
-      const newPath = path.join(UPLOAD_DIR, newFilename);
+      const newPath = path.join(targetDir, newFilename);
 
       // Rename the file
       fs.renameSync(oldPath, newPath);
 
       // Also rename the metadata file
       const oldMetadataPath = path.join(UPLOAD_DIR, `${upload.id}.json`);
-      const newMetadataPath = path.join(UPLOAD_DIR, `${newFilename}.json`);
+      const newMetadataPath = `${newPath}.json`;
 
       if (fs.existsSync(oldMetadataPath)) {
         fs.renameSync(oldMetadataPath, newMetadataPath);
       }
 
-      console.log(`Upload completed: ${newFilename} (original: ${originalFilename}), Size: ${upload.offset} bytes`);
+      const displayPath = path.relative(UPLOAD_DIR, newPath);
+      console.log(`Upload completed: ${displayPath} (original: ${relativePath || originalFilename}), Size: ${upload.offset} bytes`);
     } catch (error) {
       console.error(`Error renaming file ${upload.id}:`, error.message);
       // Don't throw error to avoid breaking the upload
@@ -447,41 +490,78 @@ app.get('/api/config', (req, res) => {
     maxFileSize: MAX_FILE_SIZE_GB,
     chunkSize: CHUNK_SIZE_MB,
     corsOrigin: CORS_ORIGIN,
+    maxParallelUploads: MAX_PARALLEL_UPLOADS,
   });
 });
 
-// Endpoint to list completed uploads
-app.get('/api/uploads', (req, res) => {
-  const files = fs.readdirSync(UPLOAD_DIR);
-  const uploads = files
-    .filter(filename => !filename.endsWith('.json')) // Exclude metadata files
-    .filter(filename => filename.length > 0) // Exclude empty files
-    .map(filename => {
-      const filePath = path.join(UPLOAD_DIR, filename);
+// Recursively collect completed files under UPLOAD_DIR (excludes metadata and partial TUS uploads)
+function listCompletedFiles(dir = UPLOAD_DIR, result = []) {
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch (error) {
+    console.error(`Error reading directory ${dir}:`, error.message);
+    return result;
+  }
+
+  entries.forEach(entry => {
+    const filePath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      listCompletedFiles(filePath, result);
+      return;
+    }
+
+    // Exclude metadata files (.json) and TUS partial uploads (no .json metadata alongside)
+    if (entry.name.endsWith('.json')) {
+      return;
+    }
+
+    const relativeName = path.relative(UPLOAD_DIR, filePath);
+    const metadataPath = `${filePath}.json`;
+    if (!fs.existsSync(metadataPath)) {
+      // No metadata: this is an in-progress TUS upload, skip it
+      return;
+    }
+
+    try {
       const stats = fs.statSync(filePath);
 
       // Try to get original filename from metadata
-      let originalName = filename;
+      let originalName = relativeName;
       try {
-        const metadataPath = path.join(UPLOAD_DIR, `${filename}.json`);
-        if (fs.existsSync(metadataPath)) {
-          const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-          originalName = metadata.metadata?.filename || filename;
+        const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+        const metaName = metadata.metadata?.filename;
+        const metaRelPath = sanitizeRelativePath(metadata.metadata?.relativepath || '');
+        if (metaRelPath) {
+          originalName = metaRelPath;
+        } else if (metaName) {
+          originalName = path.join(relativeName.includes(path.sep) ? path.dirname(relativeName) : '', metaName);
         }
       } catch {
         // If metadata read fails, use filename
       }
 
-      return {
-        id: filename,
-        name: originalName,
-        size: stats.size,
-        modified: stats.mtime,
-        url: `/upload/${filename}`,
-        status: 'completed',
-      };
-    })
-    .filter(upload => upload.size > 0); // Exclude empty files
+      if (stats.size > 0) {
+        result.push({
+          id: relativeName,
+          name: originalName,
+          size: stats.size,
+          modified: stats.mtime,
+          url: `/upload/${relativeName.split(path.sep).map(encodeURIComponent).join('/')}`,
+          status: 'completed',
+        });
+      }
+    } catch (error) {
+      console.error(`Error statting ${relativeName}:`, error.message);
+    }
+  });
+
+  return result;
+}
+
+// Endpoint to list completed uploads
+app.get('/api/uploads', (req, res) => {
+  const uploads = listCompletedFiles().sort((a, b) => a.name.localeCompare(b.name));
   res.json(uploads);
 });
 

@@ -76,9 +76,9 @@ pnpm run generate-key  # Generate new secure ACCESS_KEY and update .env
 
 ```
 fastupload/
-├── server.js              # Main application (552 lines)
+├── server.js              # Main application (~690 lines)
 ├── public/
-│   └── index.html         # Frontend (672 lines, vanilla JS)
+│   └── index.html         # Frontend (~1050 lines, vanilla JS)
 ├── scripts/
 │   ├── README.md          # Scripts documentation
 │   ├── generate-key.js    # Access key generator
@@ -158,6 +158,7 @@ MAX_FILE_SIZE_GB=50         # Max upload size in GB
 UPLOAD_DIR=./uploads         # Upload directory path
 CORS_ORIGIN=*              # CORS origin setting
 CHUNK_SIZE_MB=50           # Chunk size in MB
+MAX_PARALLEL_UPLOADS=4     # Max simultaneous uploads for batch/folder uploads
 ACCESS_KEY=               # Optional: access key for authentication
 ```
 
@@ -182,6 +183,8 @@ No automated tests exist in this codebase.
 3. Test file upload with various sizes
 4. Test resume functionality (pause, reload, resume)
 5. Test partial upload detection
+6. Test folder drop & folder picker: directory tree must be recreated under UPLOAD_DIR
+7. Test batch queue: more than MAX_PARALLEL_UPLOADS files → extra items show "Queued"
 
 ### What to Test When Making Changes
 
@@ -190,8 +193,8 @@ No automated tests exist in this codebase.
 - Chunk upload works (PATCH /upload/:id)
 - Upload status checking works (HEAD /upload/:id)
 - File naming works correctly (original-name-timestamp.ext)
-- Cleanup removes empty files and orphaned metadata
-- Authentication works (if ACCESS_KEY is set)
+- Directory uploads recreate the client-side tree (relativepath metadata), sanitized against path traversal
+- Cleanup removes empty files and orphaned metadata (recursive, removes emptied dirs)
 
 ## Important Gotchas
 
@@ -215,6 +218,20 @@ No automated tests exist in this codebase.
 - **Public Access**: If `ACCESS_KEY` is empty, no authentication required
 
 ### Recent Features and Fixes
+
+#### Folder Uploads & Batch Queue (2026-09)
+
+- **Directory Drop**: Drag & drop folders — client traverses the tree via `webkitGetAsEntry()` (handles the 100-entries-per-readEntries batch limit)
+- **Folder Picker**: Separate "Choose Folder" button uses `webkitdirectory` input; `webkitRelativePath` supplies the tree
+- **Server-Side Tree Recreation**: Client sends `relativepath` TUS metadata; `onUploadFinish` sanitizes it (`sanitizeRelativePath`: drops `..`, `.`, empty segments, drive letters) and `mkdirSync(recursive)` under UPLOAD_DIR before renaming
+- **Path Traversal Safety**: Double defense — sanitization + `path.resolve()` containment check inside `onUploadFinish`
+- **Batch Queue**: `MAX_PARALLEL_UPLOADS` (env, default 4, served via `/api/config`); client FIFO queue (`processQueue`/`finishJob`); queued items show "Queued" chip; global batch summary bar with aggregate progress
+- **Recursive Listing/Cleanup**: `/api/uploads` and startup cleanup now walk subdirectories; cleanup removes emptied dirs
+- **XSS Hardening**: File/folder names are HTML-escaped before insertion (`escapeHtml`)
+- **Scalable Rendering (large batches)**: ≤12 files → rich per-file cards; >12 → one collapsed group card per directory with aggregate progress; file rows are materialized lazily on group expansion (auto-collapse when a group has >10 files; user toggle wins). Stress-tested with 1100 files / 11 dirs: ~825 DOM nodes total, group expand ~1ms.
+- **rAF-throttled DOM updates**: progress events only mark jobs dirty; a single scheduler loop applies updates once per frame (`scheduleFlush`/`applyPendingDomUpdates`). Falls back to `setTimeout(250)` when `document.visibilityState !== 'visible'` (hidden tabs never fire rAF — discovered via headless test).
+- **Streaming enqueue**: dropped-folder traversal calls `enqueueJob` per discovered file inside a batch session (`beginBatch`/`endBatch`); the queue starts draining at `endBatch`, rendering mode decided once per batch.
+- **Batch controls**: Pause All / Resume All / Cancel All / Clear Completed buttons in the summary bar; global speed = sum of active uploads, ETA = remaining bytes / global speed.
 
 #### Speed/ETA Calculation (2026-01)
 

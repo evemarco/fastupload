@@ -71,10 +71,59 @@
       display: none;
     }
 
+    .picker-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin: 15px 0 5px;
+    }
+
+    .drop-notice {
+      min-height: 18px;
+      font-size: 13px;
+      color: #667eea;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+
+    .batch-summary {
+      margin-top: 20px;
+      background: #f0f4ff;
+      border: 1px solid #d6e0ff;
+      border-radius: 8px;
+      padding: 15px 20px;
+    }
+
+    .batch-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .batch-header .done-badge {
+      color: #388e3c;
+    }
+
+    .batch-controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .batch-controls .btn {
+      padding: 5px 12px;
+      font-size: 12px;
+    }
+
     .upload-list {
       margin-top: 30px;
     }
 
+    /* ===== Rich card (small batches) ===== */
     .upload-item {
       background: #f9f9f9;
       border: 1px solid #e0e0e0;
@@ -87,6 +136,7 @@
       color: #333;
       margin-bottom: 10px;
       font-size: 16px;
+      word-break: break-all;
     }
 
     .upload-item .file-info {
@@ -131,6 +181,7 @@
       font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .status.uploading {
@@ -146,6 +197,11 @@
     .status.in_progress {
       background: #e3f2fd;
       color: #1976d2;
+    }
+
+    .status.queued {
+      background: #eceff1;
+      color: #607d8b;
     }
 
     .status.completed {
@@ -214,6 +270,146 @@
       color: #667eea;
       font-weight: 600;
     }
+
+    /* ===== Grouped view (large batches) ===== */
+    .upload-group {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .group-header:hover {
+      background: #f0f4ff;
+    }
+
+    .group-toggle {
+      color: #999;
+      font-size: 12px;
+      width: 14px;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .group-toggle.open {
+      transform: rotate(90deg);
+    }
+
+    .group-path {
+      font-family: ui-monospace, 'Cascadia Mono', 'Source Code Pro', Menlo, Consolas, monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      word-break: break-all;
+      flex: 1;
+    }
+
+    .group-stats {
+      font-size: 12px;
+      color: #666;
+      white-space: nowrap;
+    }
+
+    .group-bar {
+      width: 120px;
+      height: 6px;
+      flex-shrink: 0;
+    }
+
+    .group-files {
+      border-top: 1px solid #ececec;
+      background: white;
+    }
+
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 16px 7px 42px;
+      border-bottom: 1px solid #f5f5f5;
+      font-size: 13px;
+    }
+
+    .file-row:last-child {
+      border-bottom: none;
+    }
+
+    .file-row.error-row {
+      background: #fff8f8;
+    }
+
+    .fr-name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #444;
+    }
+
+    .fr-bar {
+      width: 90px;
+      height: 5px;
+      background: #e8e8e8;
+      border-radius: 3px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .fr-fill {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .fr-pct {
+      width: 48px;
+      text-align: right;
+      color: #888;
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+
+    .file-row .status {
+      font-size: 10px;
+      padding: 2px 8px;
+      width: 74px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .fr-actions {
+      display: flex;
+      gap: 6px;
+      width: 132px;
+      flex-shrink: 0;
+      justify-content: flex-end;
+    }
+
+    .fr-actions .btn {
+      padding: 3px 10px;
+      font-size: 11px;
+    }
+
+    .group-summary-note {
+      padding: 8px 16px 8px 42px;
+      font-size: 12px;
+      color: #999;
+      background: white;
+    }
   </style>
 </head>
 <body>
@@ -222,9 +418,31 @@
     <p class="subtitle">Upload large files (up to 50GB) with chunking & resume</p>
 
     <div class="upload-zone" id="dropZone">
-      <p>Drag & drop files here or click to browse</p>
-      <p class="hint">Supports resumable uploads - continue if interrupted!</p>
+      <p>Drag & drop files <strong>or folders</strong> here</p>
+      <p class="hint">Directory structure is preserved on the server. Supports resumable uploads!</p>
+      <div class="picker-row">
+        <button type="button" class="btn btn-primary" id="pickFiles">📄 Choose Files</button>
+        <button type="button" class="btn btn-secondary" id="pickFolder">📁 Choose Folder</button>
+      </div>
+      <p class="drop-notice" id="dropNotice"></p>
       <input type="file" id="fileInput" multiple>
+      <input type="file" id="folderInput" webkitdirectory multiple>
+    </div>
+
+    <div class="batch-summary" id="batchSummary" style="display: none;">
+      <div class="batch-header">
+        <span id="batchText"></span>
+        <span id="batchPercent"></span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="batchFill" style="width: 0%"></div>
+      </div>
+      <div class="batch-controls">
+        <button type="button" class="btn btn-secondary" id="pauseAllBtn">⏸ Pause All</button>
+        <button type="button" class="btn btn-secondary" id="resumeAllBtn">▶ Resume All</button>
+        <button type="button" class="btn btn-danger" id="cancelAllBtn">✕ Cancel All</button>
+        <button type="button" class="btn btn-secondary" id="clearDoneBtn">🧹 Clear Completed</button>
+      </div>
     </div>
 
     <div class="upload-list" id="uploadList"></div>
@@ -233,6 +451,12 @@
   <script>
     const TUS_ENDPOINT = '/upload';
     let CHUNK_SIZE = 50 * 1024 * 1024; // Default 50MB chunks (optimal for most networks)
+    let MAX_PARALLEL_UPLOADS = 4; // Overridden by /api/config
+
+    // Below this many files, render rich per-file cards; above, group by directory
+    const SMALL_BATCH_MAX = 12;
+    // Directory groups with more than this many files start collapsed
+    const COLLAPSE_ABOVE = 10;
 
     // Load server configuration
     async function loadServerConfig() {
@@ -243,6 +467,10 @@
           CHUNK_SIZE = config.chunkSize * 1024 * 1024; // Convert MB to bytes
           console.log(`Server config loaded: chunk size = ${config.chunkSize}MB`);
         }
+        if (config.maxParallelUploads) {
+          MAX_PARALLEL_UPLOADS = parseInt(config.maxParallelUploads);
+          console.log(`Server config loaded: max parallel uploads = ${MAX_PARALLEL_UPLOADS}`);
+        }
       } catch (error) {
         console.warn('Failed to load server config, using default chunk size:', error);
       }
@@ -250,166 +478,307 @@
 
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
+    const folderInput = document.getElementById('folderInput');
     const uploadList = document.getElementById('uploadList');
+    const dropNotice = document.getElementById('dropNotice');
 
-    // Storage for active uploads
-    const activeUploads = new Map();
+    // job registry: uploadId -> job
+    // job = { id, file, name, dir, size, uploaded, state, finished, els, renderedState,
+    //         lastBytes, lastTime, speed }
+    // els = DOM node references for the rendered item (rich card or compact row)
+    const jobs = new Map();
+    // directory groups: dir -> { dir, rootEl, statsEl, fillEl, filesEl, toggleEl, jobs:Set,
+    //                            materialized, collapsed, userToggled, dirty }
+    const groups = new Map();
+    // FIFO upload queue of job ids
+    const uploadQueue = [];
+    const activeUploads = new Map(); // uploadId -> { upload, startTime, initialBytes, pauseStartTime, totalPausedTime }
+    let activeCount = 0;
+    let uploadCounter = 0;
 
-    // Drag and drop handlers
-    dropZone.addEventListener('click', () => fileInput.click());
-    
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
+    // Collect DOM refs for every rendered job (rich cards and compact rows alike)
+    const els = new Map(); // uploadId -> { fill, pct, sizeInfo, status, chunkInfo, speed, eta, actions, row }
 
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('dragover');
-    });
+    // ==================== Utilities ====================
 
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      handleFiles(e.dataTransfer.files);
-    });
-
-    fileInput.addEventListener('change', (e) => {
-      handleFiles(e.target.files);
-    });
-
-    function handleFiles(files) {
-      Array.from(files).forEach(file => {
-        startUpload(file);
-      });
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[c]));
     }
 
-    function startUpload(file, existingUploadId = null) {
-      const uploadId = existingUploadId || `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    function formatSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
 
-      const uploadItem = createUploadItem(uploadId, file);
-      uploadList.appendChild(uploadItem);
+    function formatTime(seconds) {
+      if (!isFinite(seconds) || seconds < 0) return '--';
+      if (seconds < 60) return Math.round(seconds) + 's';
+      if (seconds < 3600) return Math.round(seconds / 60) + 'm ' + Math.round(seconds % 60) + 's';
+      const hours = Math.floor(seconds / 3600);
+      const mins = Math.round((seconds % 3600) / 60);
+      return hours + 'h ' + mins + 'm';
+    }
 
-      const upload = new tus.Upload(file, {
-        endpoint: TUS_ENDPOINT,
-        chunkSize: CHUNK_SIZE,
-        retryDelays: [0, 1000, 3000, 5000],
-        metadata: {
-          filename: file.name,
-          filetype: file.type,
-        },
-        
-        onStart() {
-          updateStatus(uploadId, 'uploading');
-        },
-        
-        onProgress(bytesUploaded, bytesTotal) {
-          const percentage = (bytesUploaded / bytesTotal * 100).toFixed(2);
-          const uploaded = formatSize(bytesUploaded);
-          const total = formatSize(bytesTotal);
-          updateProgress(uploadId, percentage, uploaded, total);
-          
-          // Calculate speed and ETA in real-time
-          const upload = activeUploads.get(uploadId);
-          if (upload) {
-            const elapsed = (Date.now() - upload.startTime) / 1000;
-            
-            // Calculate speed based on NEW data uploaded since start/resume
-            const bytesSinceStart = bytesUploaded - upload.initialBytes;
-            
-            // Only calculate/display speed after some time has passed (1 second)
-            // This prevents erratic values in first second
-            if (elapsed > 1.0 && bytesSinceStart > 0) {
-              const speed = bytesSinceStart / elapsed;
-              updateSpeed(uploadId, formatSize(speed) + '/s');
-              
-              // Estimate remaining time based on total remaining bytes
-              const remaining = bytesTotal - bytesUploaded;
-              const eta = remaining / speed;
-              updateETA(uploadId, formatTime(eta) + ' remaining');
+    const STATE_LABELS = {
+      queued: 'Queued',
+      uploading: 'Uploading',
+      paused: 'Paused',
+      completed: 'Completed',
+      error: 'Error',
+    };
+
+    // ==================== DOM update scheduler (rAF-throttled) ====================
+    // Progress events mark jobs dirty; a single requestAnimationFrame loop applies
+    // all pending DOM updates at most once per frame, regardless of event volume.
+
+    const dirtyJobs = new Set();
+    const dirtyGroups = new Set();
+    let rafPending = false;
+
+    function markJobDirty(uploadId) {
+      dirtyJobs.add(uploadId);
+      const job = jobs.get(uploadId);
+      if (job && job.dir !== null) {
+        dirtyGroups.add(job.dir);
+      }
+      scheduleFlush();
+    }
+
+    function markGroupDirty(dir) {
+      dirtyGroups.add(dir);
+      scheduleFlush();
+    }
+
+    function scheduleFlush() {
+      if (rafPending) return;
+      rafPending = true;
+      // Hidden/background tabs throttle requestAnimationFrame to zero: fall back to
+      // a macrotask so progress keeps rendering (e.g. user switches tab mid-batch).
+      if (document.visibilityState === 'visible') {
+        requestAnimationFrame(applyPendingDomUpdates);
+      } else {
+        setTimeout(applyPendingDomUpdates, 250);
+      }
+    }
+
+    function anyUploading() {
+      for (const j of jobs.values()) {
+        if (j.state === 'uploading') return true;
+      }
+      return false;
+    }
+
+    function applyPendingDomUpdates() {
+      rafPending = false;
+
+      for (const uploadId of dirtyJobs) {
+        const job = jobs.get(uploadId);
+        if (job) {
+          updateJobDom(job);
+        }
+      }
+      dirtyJobs.clear();
+
+      for (const dir of dirtyGroups) {
+        const group = groups.get(dir);
+        if (group) {
+          updateGroupDom(group);
+        }
+      }
+      dirtyGroups.clear();
+
+      updateBatchDom();
+
+      // Keep the loop alive while uploads are in flight (speed/ETA refresh)
+      if (anyUploading()) {
+        scheduleFlush();
+      }
+    }
+
+    function updateJobDom(job) {
+      const e = els.get(job.id);
+      if (!e) return; // Row not materialized (collapsed group): data-only
+
+      const pct = job.size > 0 ? Math.min(100, job.uploaded / job.size * 100) : 0;
+      if (e.fill) e.fill.style.width = pct + '%';
+      if (e.pct) e.pct.textContent = pct.toFixed(0) + '%';
+      if (e.sizeInfo) e.sizeInfo.textContent = `${formatSize(job.uploaded)} / ${formatSize(job.size)}`;
+
+      if (e.status && job.renderedState !== job.state) {
+        e.status.className = `status ${job.state}`;
+        e.status.textContent = STATE_LABELS[job.state] || job.state;
+        job.renderedState = job.state;
+        applyJobActions(job);
+      }
+
+      // Speed & ETA (per job, rich cards only; compact rows keep the group aggregate)
+      if (e.speed && job.state === 'uploading') {
+        const ud = activeUploads.get(job.id);
+        if (ud && job.uploaded > ud.initialBytes) {
+          const elapsed = (Date.now() - ud.startTime - (ud.totalPausedTime || 0)) / 1000;
+          if (elapsed > 1.0) {
+            const speed = (job.uploaded - ud.initialBytes) / elapsed;
+            e.speed.textContent = formatSize(speed) + '/s';
+            if (e.eta) {
+              const remaining = job.size - job.uploaded;
+              e.eta.textContent = formatTime(remaining / speed) + ' remaining';
             }
           }
-        },
-        
-        onChunkComplete(chunkSize, bytesUploaded, bytesTotal) {
-          const uploaded = formatSize(bytesUploaded);
-          const total = formatSize(bytesTotal);
-          const chunks = Math.ceil(bytesUploaded / CHUNK_SIZE);
-          const totalChunks = Math.ceil(bytesTotal / CHUNK_SIZE);
-          updateChunkInfo(uploadId, `Chunk ${chunks}/${totalChunks} completed`);
-        },
-        
-        onSuccess() {
-          updateStatus(uploadId, 'completed');
-          const upload = activeUploads.get(uploadId);
-          if (upload) {
-            const elapsed = (Date.now() - upload.startTime) / 1000;
-            updateChunkInfo(uploadId, `Completed in ${formatTime(elapsed)}`);
-          }
-          updateActions(uploadId, false, true);
-        },
-        
-        onError(error) {
-          console.error('Upload error:', error);
-          updateStatus(uploadId, 'error', error.message);
-          updateActions(uploadId, true, false);
+        }
+      } else if (e.speed && job.state !== 'uploading') {
+        e.speed.textContent = '';
+        if (e.eta) e.eta.textContent = '';
+      }
+    }
+
+    function updateGroupDom(group) {
+      // Aggregate from member jobs
+      let count = 0;
+      let done = 0;
+      let failed = 0;
+      let bytes = 0;
+      let uploaded = 0;
+      for (const id of group.jobs) {
+        const j = jobs.get(id);
+        if (!j) continue;
+        count++;
+        bytes += j.size;
+        uploaded += Math.min(j.uploaded, j.size);
+        if (j.state === 'completed') done++;
+        else if (j.state === 'error') failed++;
+      }
+      group.count = count;
+      group.done = done;
+      group.failed = failed;
+
+      const pct = bytes > 0 ? Math.min(100, uploaded / bytes * 100) : 0;
+      group.statsEl.textContent = `${done} / ${count} files · ${formatSize(uploaded)} / ${formatSize(bytes)}${failed ? ` · ${failed} failed` : ''}`;
+      group.fillEl.style.width = pct + '%';
+
+      // Auto-collapse large groups unless the user toggled manually
+      if (!group.userToggled) {
+        const shouldCollapse = count > COLLAPSE_ABOVE;
+        if (shouldCollapse !== group.collapsed) {
+          group.collapsed = shouldCollapse;
+          applyGroupCollapse(group);
+        }
+      }
+
+      if (!group.collapsed && !group.materialized) {
+        materializeGroupRows(group);
+      }
+    }
+
+    function applyGroupCollapse(group) {
+      group.filesEl.style.display = group.collapsed ? 'none' : 'block';
+      group.toggleEl.classList.toggle('open', !group.collapsed);
+    }
+
+    // ==================== Rendering ====================
+
+    function getOrCreateGroup(dir) {
+      let group = groups.get(dir);
+      if (group) return group;
+
+      const rootEl = document.createElement('div');
+      rootEl.className = 'upload-group';
+      rootEl.innerHTML = `
+        <div class="group-header">
+          <span class="group-toggle">▶</span>
+          <span class="group-path">${escapeHtml(dir || '(root)')}</span>
+          <div class="progress-bar group-bar"><div class="progress-fill" style="width: 0%"></div></div>
+          <span class="group-stats">0 files</span>
+        </div>
+        <div class="group-files" style="display: block;"></div>
+      `;
+      uploadList.appendChild(rootEl);
+
+      group = {
+        dir,
+        rootEl,
+        toggleEl: rootEl.querySelector('.group-toggle'),
+        statsEl: rootEl.querySelector('.group-stats'),
+        fillEl: rootEl.querySelector('.progress-fill'),
+        filesEl: rootEl.querySelector('.group-files'),
+        jobs: new Set(),
+        materialized: false,
+        collapsed: false,
+        userToggled: false,
+      };
+
+      rootEl.querySelector('.group-header').addEventListener('click', () => {
+        group.userToggled = true;
+        group.collapsed = !group.collapsed;
+        applyGroupCollapse(group);
+        if (!group.collapsed) {
+          materializeGroupRows(group);
         }
       });
 
-      // Check for previous upload to resume
-      upload.findPreviousUploads().then(async (previousUploads) => {
-        let initialBytes = 0; // Default for new uploads
-        let validPreviousUpload = null;
-        
-        if (previousUploads.length > 0) {
-          const prevUpload = previousUploads[0];
-          
-          // Check if previous upload still exists on server
-          try {
-            const response = await fetch(prevUpload.uploadUrl, {
-              method: 'HEAD'
-            });
-            
-            if (response.ok) {
-              // Previous upload exists, use it for resume
-              validPreviousUpload = prevUpload;
-              initialBytes = prevUpload.offset;
-              upload.resumeFromPreviousUpload(prevUpload);
-              updateChunkInfo(uploadId, 'Resuming previous upload...');
-            } else {
-              // Previous upload doesn't exist, start fresh
-              console.log('Previous partial upload not found on server, starting fresh');
-              updateChunkInfo(uploadId, 'Starting new upload (previous upload not found)');
-            }
-          } catch (error) {
-            // Error checking, start fresh
-            console.warn('Error checking previous upload:', error);
-            console.log('Starting new upload');
-            updateChunkInfo(uploadId, 'Starting new upload (check failed)');
-          }
-        }
-        
-        // Store upload reference after determining if it's a resume
-        activeUploads.set(uploadId, {
-          upload: upload,
-          startTime: Date.now(),
-          initialBytes: initialBytes,
-          pauseStartTime: null, // Track when pause started
-          totalPausedTime: 0 // Track total time spent paused
-        });
-
-        
-        upload.start(); // Start upload
-      });
+      groups.set(dir, group);
+      return group;
     }
-    function createUploadItem(uploadId, file) {
+
+    // Create compact rows for jobs in a group that don't have DOM yet
+    function materializeGroupRows(group) {
+      for (const id of group.jobs) {
+        const job = jobs.get(id);
+        if (job && !job.els) {
+          createGroupRow(job, group);
+        }
+      }
+      group.materialized = true;
+    }
+
+    const rowTemplate = document.createElement('template');
+    rowTemplate.innerHTML = `
+      <div class="file-row">
+        <span class="fr-name"></span>
+        <span class="fr-bar"><span class="fr-fill"></span></span>
+        <span class="fr-pct">0%</span>
+        <span class="status queued">Queued</span>
+        <span class="fr-actions"></span>
+      </div>
+    `;
+
+    function createGroupRow(job, group) {
+      const row = rowTemplate.content.firstElementChild.cloneNode(true);
+      const nameEl = row.querySelector('.fr-name');
+      nameEl.textContent = job.name;
+      nameEl.title = job.relativePath;
+
+      group.filesEl.appendChild(row);
+      job.els = {
+        row,
+        fill: row.querySelector('.fr-fill'),
+        pct: row.querySelector('.fr-pct'),
+        status: row.querySelector('.status'),
+        actions: row.querySelector('.fr-actions'),
+      };
+      els.set(job.id, job.els);
+      job.renderedState = 'queued';
+      job.els.status.className = `status ${job.state}`;
+      job.els.status.textContent = STATE_LABELS[job.state] || job.state;
+      applyJobActions(job);
+    }
+
+    function createRichCard(job) {
       const div = document.createElement('div');
       div.className = 'upload-item';
-      div.id = uploadId;
       div.innerHTML = `
-        <h3>${file.name}</h3>
+        <h3>${escapeHtml(job.relativePath)}</h3>
         <div class="file-info">
-          <span>Size: ${formatSize(file.size)}</span>
-          <span class="status uploading">Uploading</span>
+          <span>Size: ${formatSize(job.size)}</span>
+          <span class="status ${job.state}">${STATE_LABELS[job.state]}</span>
         </div>
         <div class="progress-container">
           <div class="progress-bar">
@@ -417,127 +786,431 @@
           </div>
           <div class="progress-text">
             <span class="percentage">0%</span>
-            <span class="size-info">0 / ${formatSize(file.size)}</span>
+            <span class="size-info">0 / ${formatSize(job.size)}</span>
           </div>
         </div>
-        <div class="chunk-info"></div>
+        <div class="chunk-info">Waiting for a free slot...</div>
         <div class="progress-text" style="margin-top: 10px;">
           <span class="speed"></span>
           <span class="eta"></span>
         </div>
-        <div class="actions">
-          <button class="btn btn-secondary" onclick="pauseUpload('${uploadId}')">Pause</button>
-          <button class="btn btn-danger" onclick="cancelUpload('${uploadId}')">Cancel</button>
-        </div>
+        <div class="actions"></div>
       `;
-      return div;
+      uploadList.appendChild(div);
+      job.els = {
+        row: div,
+        fill: div.querySelector('.progress-fill'),
+        pct: div.querySelector('.percentage'),
+        sizeInfo: div.querySelector('.size-info'),
+        status: div.querySelector('.status'),
+        chunkInfo: div.querySelector('.chunk-info'),
+        speed: div.querySelector('.speed'),
+        eta: div.querySelector('.eta'),
+        actions: div.querySelector('.actions'),
+      };
+      els.set(job.id, job.els);
+      job.renderedState = job.state;
+      applyJobActions(job);
     }
 
-    function updateProgress(uploadId, percentage, uploaded, total) {
-      const item = document.getElementById(uploadId);
-      if (item) {
-        item.querySelector('.progress-fill').style.width = `${percentage}%`;
-        item.querySelector('.percentage').textContent = `${percentage}%`;
-        item.querySelector('.size-info').textContent = `${uploaded} / ${total}`;
+    function applyJobActions(job) {
+      const e = els.get(job.id);
+      if (!e || !e.actions) return;
+
+      if (job.state === 'uploading') {
+        e.actions.innerHTML = `
+          <button type="button" class="btn btn-secondary" onclick="pauseUpload('${job.id}')">Pause</button>
+          <button type="button" class="btn btn-danger" onclick="cancelUpload('${job.id}')">Cancel</button>
+        `;
+      } else if (job.state === 'paused') {
+        e.actions.innerHTML = `
+          <button type="button" class="btn btn-primary" onclick="resumeUpload('${job.id}')">Resume</button>
+          <button type="button" class="btn btn-danger" onclick="cancelUpload('${job.id}')">Cancel</button>
+        `;
+      } else if (job.state === 'error') {
+        e.actions.innerHTML = `
+          <button type="button" class="btn btn-primary" onclick="resumeUpload('${job.id}')">Retry</button>
+          <button type="button" class="btn btn-danger" onclick="cancelUpload('${job.id}')">Cancel</button>
+        `;
+      } else if (job.state === 'completed') {
+        e.actions.innerHTML = e.chunkInfo
+          ? `<button type="button" class="btn btn-primary" onclick="location.reload()">Upload More</button>`
+          : '';
+      } else {
+        // queued
+        e.actions.innerHTML = `
+          <button type="button" class="btn btn-danger" onclick="cancelUpload('${job.id}')">Cancel</button>
+        `;
       }
     }
 
-    function updateStatus(uploadId, status, message = '') {
-      const item = document.getElementById(uploadId);
-      if (item) {
-        const statusEl = item.querySelector('.status');
-        statusEl.className = `status ${status}`;
-        statusEl.textContent = status;
-        
-        if (message) {
-          const chunkInfo = item.querySelector('.chunk-info');
-          chunkInfo.textContent = message;
-          chunkInfo.style.color = '#d32f2f';
-        }
+    function removeJobDom(job) {
+      if (job.els && job.els.row) {
+        job.els.row.remove();
       }
-    }
-
-    function updateChunkInfo(uploadId, message) {
-      const item = document.getElementById(uploadId);
-      if (item) {
-        const chunkInfo = item.querySelector('.chunk-info');
-        chunkInfo.textContent = message;
-        chunkInfo.style.color = '#999';
-      }
-    }
-
-    function updateSpeed(uploadId, speed) {
-      const item = document.getElementById(uploadId);
-      if (item) {
-        item.querySelector('.speed').textContent = speed;
-      }
-    }
-
-    function updateETA(uploadId, eta) {
-      const item = document.getElementById(uploadId);
-      if (item) {
-        item.querySelector('.eta').textContent = eta;
-      }
-    }
-
-    function updateActions(uploadId, showResume, showDone) {
-      const item = document.getElementById(uploadId);
-      if (item) {
-        const actions = item.querySelector('.actions');
-        if (showResume) {
-          actions.innerHTML = `
-            <button class="btn btn-primary" onclick="resumeUpload('${uploadId}')">Resume</button>
-            <button class="btn btn-danger" onclick="cancelUpload('${uploadId}')">Cancel</button>
-          `;
-        } else if (showDone) {
-          actions.innerHTML = `
-            <button class="btn btn-primary" onclick="location.reload()">Upload More</button>
-          `;
+      els.delete(job.id);
+      const group = groups.get(job.dir);
+      if (group) {
+        group.jobs.delete(job.id);
+        if (group.jobs.size === 0) {
+          group.rootEl.remove();
+          groups.delete(job.dir);
         } else {
-          // Show default Pause and Cancel buttons
-          actions.innerHTML = `
-            <button class="btn btn-secondary" onclick="pauseUpload('${uploadId}')">Pause</button>
-            <button class="btn btn-danger" onclick="cancelUpload('${uploadId}')">Cancel</button>
-          `;
+          markGroupDirty(job.dir);
         }
       }
     }
+
+    // ==================== Batch session (streaming enqueue) ====================
+    // Files discovered during folder traversal are accumulated in a session so the
+    // rendering mode (rich cards vs grouped) is decided once per batch, and the
+    // queue starts draining immediately at endBatch().
+
+    let batchSession = null;
+
+    function beginBatch() {
+      batchSession = [];
+    }
+
+    // Called per discovered file during traversal (streaming) or in a loop for inputs
+    function enqueueJob(file, relativePath) {
+      const entry = {
+        id: `upload-${Date.now().toString(36)}-${++uploadCounter}`,
+        file,
+        relativePath: relativePath || file.name,
+      };
+      if (batchSession) {
+        batchSession.push(entry);
+      } else {
+        materializeJobs([entry]);
+      }
+    }
+
+    function endBatch() {
+      const entries = batchSession;
+      batchSession = null;
+      if (!entries || entries.length === 0) return;
+      materializeJobs(entries);
+    }
+
+    function materializeJobs(entries) {
+      const useRichCards = jobs.size + entries.length <= SMALL_BATCH_MAX;
+
+      for (const entry of entries) {
+        const dir = entry.relativePath.includes('/')
+          ? entry.relativePath.slice(0, entry.relativePath.lastIndexOf('/'))
+          : '';
+        const job = {
+          id: entry.id,
+          file: entry.file,
+          name: entry.file.name,
+          relativePath: entry.relativePath,
+          dir,
+          size: entry.file.size,
+          uploaded: 0,
+          state: 'queued',
+          finished: false,
+          els: null,
+          renderedState: 'queued',
+          lastBytes: 0,
+          lastTime: 0,
+          speed: 0,
+        };
+        jobs.set(job.id, job);
+
+        if (useRichCards) {
+          createRichCard(job);
+        } else {
+          const group = getOrCreateGroup(dir);
+          group.jobs.add(job.id);
+          if (group.materialized) {
+            createGroupRow(job, group);
+          }
+          markGroupDirty(dir);
+        }
+
+        uploadQueue.push(job.id);
+      }
+
+      scheduleFlush();
+      processQueue();
+    }
+
+    // ==================== Upload queue ====================
+
+    // Start as many queued uploads as concurrency slots allow
+    function processQueue() {
+      while (activeCount < MAX_PARALLEL_UPLOADS && uploadQueue.length > 0) {
+        const uploadId = uploadQueue.shift();
+        const job = jobs.get(uploadId);
+        if (job && !job.finished) {
+          startJob(job);
+        }
+      }
+    }
+
+    function startJob(job) {
+      activeCount++;
+      job.state = 'uploading';
+      markJobDirty(job.id);
+
+      const upload = new tus.Upload(job.file, {
+        endpoint: TUS_ENDPOINT,
+        chunkSize: CHUNK_SIZE,
+        retryDelays: [0, 1000, 3000, 5000],
+        metadata: {
+          filename: job.file.name,
+          filetype: job.file.type,
+          relativepath: job.relativePath,
+        },
+
+        onStart() {
+          job.state = 'uploading';
+          markJobDirty(job.id);
+        },
+
+        onProgress(bytesUploaded, bytesTotal) {
+          job.uploaded = bytesUploaded;
+          markJobDirty(job.id);
+        },
+
+        onChunkComplete(chunkSize, bytesUploaded, bytesTotal) {
+          const e = els.get(job.id);
+          if (e && e.chunkInfo) {
+            const chunks = Math.ceil(bytesUploaded / CHUNK_SIZE);
+            const totalChunks = Math.ceil(bytesTotal / CHUNK_SIZE);
+            e.chunkInfo.textContent = `Chunk ${chunks}/${totalChunks} completed`;
+          }
+        },
+
+        onSuccess() {
+          finishJob(job, 'completed');
+          const ud = activeUploads.get(job.id);
+          const elapsed = ud ? (Date.now() - ud.startTime - (ud.totalPausedTime || 0)) / 1000 : 0;
+          if (job.els && job.els.chunkInfo) {
+            job.els.chunkInfo.textContent = `Completed in ${formatTime(elapsed)}`;
+          }
+        },
+
+        onError(error) {
+          console.error('Upload error:', error);
+          finishJob(job, 'error');
+          const e = els.get(job.id);
+          if (e && e.chunkInfo && error.message) {
+            e.chunkInfo.textContent = error.message;
+            e.chunkInfo.style.color = '#d32f2f';
+          }
+        }
+      });
+
+      // Check for previous upload to resume
+      upload.findPreviousUploads().then(async (previousUploads) => {
+        let initialBytes = 0; // Default for new uploads
+
+        if (previousUploads.length > 0) {
+          const prevUpload = previousUploads[0];
+
+          // Check if previous upload still exists on server
+          try {
+            const response = await fetch(prevUpload.uploadUrl, {
+              method: 'HEAD'
+            });
+
+            if (response.ok) {
+              // Previous upload exists, use it for resume
+              initialBytes = prevUpload.offset;
+              upload.resumeFromPreviousUpload(prevUpload);
+              const e = els.get(job.id);
+              if (e && e.chunkInfo) {
+                e.chunkInfo.textContent = 'Resuming previous upload...';
+              }
+            } else {
+              // Previous upload doesn't exist, start fresh
+              console.log('Previous partial upload not found on server, starting fresh');
+            }
+          } catch (error) {
+            // Error checking, start fresh
+            console.warn('Error checking previous upload:', error);
+          }
+        }
+
+        // Store upload reference after determining if it's a resume
+        activeUploads.set(job.id, {
+          upload,
+          startTime: Date.now(),
+          initialBytes,
+          pauseStartTime: null, // Track when pause started
+          totalPausedTime: 0 // Track total time spent paused
+        });
+
+        upload.start(); // Start upload
+      });
+    }
+
+    // Free a concurrency slot when a job leaves the "uploading" state
+    function finishJob(job, finalState) {
+      if (!job.finished) {
+        job.finished = true;
+        job.state = finalState;
+        if (finalState === 'completed') {
+          job.uploaded = job.size;
+        }
+        activeCount = Math.max(0, activeCount - 1);
+        processQueue();
+      }
+      markJobDirty(job.id);
+    }
+
+    function updateBatchDom() {
+      const summary = document.getElementById('batchSummary');
+      if (jobs.size === 0) {
+        summary.style.display = 'none';
+        return;
+      }
+      summary.style.display = 'block';
+
+      let total = 0;
+      let done = 0;
+      let failed = 0;
+      let queued = 0;
+      let paused = 0;
+      let totalBytes = 0;
+      let uploadedBytes = 0;
+      let speedSum = 0;
+
+      for (const j of jobs.values()) {
+        total++;
+        totalBytes += j.size;
+        uploadedBytes += Math.min(j.uploaded, j.size);
+        if (j.state === 'completed') {
+          done++;
+        } else if (j.state === 'error') {
+          failed++;
+        } else if (j.state === 'queued') {
+          queued++;
+        } else if (j.state === 'paused') {
+          paused++;
+        }
+        if (j.state === 'uploading') {
+          speedSum += j.speed || 0;
+        }
+      }
+
+      const percent = totalBytes > 0 ? Math.min(100, uploadedBytes / totalBytes * 100) : 0;
+      document.getElementById('batchFill').style.width = percent + '%';
+      document.getElementById('batchPercent').textContent = percent.toFixed(1) + '%';
+
+      let text;
+      if (done === total && failed === 0 && total > 0) {
+        text = `<span class="done-badge">✓ All ${total} files uploaded</span>`;
+      } else {
+        text = `${done} / ${total} files`;
+        if (failed > 0) text += ` · ${failed} failed`;
+        if (queued > 0) text += ` · ${queued} queued (${Math.min(activeCount, MAX_PARALLEL_UPLOADS)}/${MAX_PARALLEL_UPLOADS} active)`;
+        if (paused > 0) text += ` · ${paused} paused`;
+        if (speedSum > 0) {
+          const remaining = totalBytes - uploadedBytes;
+          text += ` · ${formatSize(speedSum)}/s · ~${formatTime(remaining / speedSum)} left`;
+        }
+      }
+      document.getElementById('batchText').innerHTML = `${text} <span class="info">(${formatSize(uploadedBytes)} / ${formatSize(totalBytes)})</span>`;
+    }
+
+    // ==================== Global controls ====================
+
+    document.getElementById('pauseAllBtn').addEventListener('click', () => {
+      for (const j of jobs.values()) {
+        if (j.state === 'uploading') {
+          pauseUpload(j.id);
+        }
+      }
+    });
+
+    document.getElementById('resumeAllBtn').addEventListener('click', () => {
+      for (const j of jobs.values()) {
+        if (j.state === 'paused') {
+          resumeUpload(j.id);
+        }
+      }
+    });
+
+    document.getElementById('cancelAllBtn').addEventListener('click', () => {
+      for (const id of [...jobs.keys()]) {
+        cancelUpload(id);
+      }
+    });
+
+    document.getElementById('clearDoneBtn').addEventListener('click', () => {
+      for (const j of [...jobs.values()]) {
+        if (j.state === 'completed') {
+          removeJobDom(j);
+          jobs.delete(j.id);
+          activeUploads.delete(j.id);
+        }
+      }
+      scheduleFlush();
+    });
+
+    // ==================== Per-upload controls ====================
 
     function pauseUpload(uploadId) {
       const uploadData = activeUploads.get(uploadId);
-      if (uploadData) {
-        uploadData.upload.abort();
-        uploadData.pauseStartTime = Date.now(); // Record when pause started
-        updateStatus(uploadId, 'paused');
-        updateActions(uploadId, true, false);
-      }
+      const job = jobs.get(uploadId);
+      if (!uploadData || !job || job.state !== 'uploading') return;
+
+      uploadData.upload.abort();
+      uploadData.pauseStartTime = Date.now(); // Record when pause started
+      job.state = 'paused';
+      markJobDirty(uploadId);
     }
 
     function resumeUpload(uploadId) {
       const uploadData = activeUploads.get(uploadId);
-      if (uploadData) {
+      const job = jobs.get(uploadId);
+      if (!uploadData || !job) return;
+
+      if (job.finished) {
+        // Resume after error: reacquire a concurrency slot
+        // (may briefly exceed MAX_PARALLEL_UPLOADS if all slots are busy; acceptable for client-side throttling)
+        job.finished = false;
+        job.state = 'uploading';
+        activeCount++;
+        // Reset speed baseline relative to already-uploaded bytes
+        uploadData.startTime = Date.now();
+        uploadData.initialBytes = job.uploaded;
+      } else if (uploadData.pauseStartTime) {
         // Calculate time spent in pause
-        if (uploadData.pauseStartTime) {
-          const pauseDuration = Date.now() - uploadData.pauseStartTime;
-          uploadData.totalPausedTime += pauseDuration;
-          uploadData.pauseStartTime = null;
-          
-          // Adjust startTime to exclude paused time
-          // This ensures speed calculation is accurate
-          uploadData.startTime += pauseDuration;
-        }
-        
-        updateStatus(uploadId, 'uploading');
-        uploadData.upload.start();
-        
-        // Update actions to show Pause button instead of Resume
-        updateActions(uploadId, false, false);
+        const pauseDuration = Date.now() - uploadData.pauseStartTime;
+        uploadData.totalPausedTime += pauseDuration;
+        uploadData.pauseStartTime = null;
+
+        // Adjust startTime to exclude paused time
+        // This ensures speed calculation is accurate
+        uploadData.startTime += pauseDuration;
       }
+
+      job.state = 'uploading';
+      markJobDirty(uploadId);
+      uploadData.upload.start();
     }
 
     function cancelUpload(uploadId) {
+      // Still queued: just drop it from the queue
+      const queueIndex = uploadQueue.indexOf(uploadId);
+      if (queueIndex !== -1) {
+        uploadQueue.splice(queueIndex, 1);
+        const job = jobs.get(uploadId);
+        if (job) {
+          removeJobDom(job);
+          jobs.delete(uploadId);
+        }
+        scheduleFlush();
+        return;
+      }
+
       const uploadData = activeUploads.get(uploadId);
-      if (uploadData) {
+      const job = jobs.get(uploadId);
+      if (uploadData && uploadData.upload && job) {
         uploadData.upload.abort();
 
         // Delete upload from server if it exists
@@ -562,29 +1235,146 @@
             });
         }
 
-        const item = document.getElementById(uploadId);
-        if (item) {
-          item.remove();
+        if (!job.finished) {
+          job.finished = true;
+          activeCount = Math.max(0, activeCount - 1);
+          processQueue();
         }
+        removeJobDom(job);
+        jobs.delete(uploadId);
         activeUploads.delete(uploadId);
+        scheduleFlush();
       }
     }
 
-    function formatSize(bytes) {
-      if (bytes === 0) return '0 B';
-      const k = 1024;
-      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    // ==================== Drop zone & pickers ====================
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    document.getElementById('pickFiles').addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.click();
+    });
+
+    document.getElementById('pickFolder').addEventListener('click', (e) => {
+      e.stopPropagation();
+      folderInput.click();
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      beginBatch();
+      const count = await collectDroppedFiles(e.dataTransfer, (file, relativePath) => {
+        enqueueJob(file, relativePath);
+      });
+      endBatch();
+      if (count === 0) {
+        showDropNotice('No files found in dropped items.');
+      } else {
+        showDropNotice(`${count} file${count > 1 ? 's' : ''} added to the queue`);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      handleInputSelection(e.target.files);
+      e.target.value = '';
+    });
+
+    folderInput.addEventListener('change', (e) => {
+      handleInputSelection(e.target.files);
+      e.target.value = '';
+    });
+
+    function handleInputSelection(files) {
+      const list = Array.from(files);
+      if (list.length === 0) return;
+
+      beginBatch();
+      for (const f of list) {
+        enqueueJob(f, f.webkitRelativePath || f.name);
+      }
+      endBatch();
+      showDropNotice(`${list.length} file${list.length > 1 ? 's' : ''} added to the queue`);
     }
 
-    function formatTime(seconds) {
-      if (seconds < 60) return Math.round(seconds) + 's';
-      if (seconds < 3600) return Math.round(seconds / 60) + 'm ' + Math.round(seconds % 60) + 's';
-      const hours = Math.floor(seconds / 3600);
-      const mins = Math.round((seconds % 3600) / 60);
-      return hours + 'h ' + mins + 'm';
+    let dropNoticeTimer = null;
+    function showDropNotice(message) {
+      dropNotice.textContent = message;
+      if (dropNoticeTimer) {
+        clearTimeout(dropNoticeTimer);
+      }
+      dropNoticeTimer = setTimeout(() => {
+        dropNotice.textContent = '';
+      }, 5000);
     }
+
+    // Recursively collect dropped items (files AND folders), calling onFile as soon
+    // as each file is discovered (streaming: no need to wait for the full traversal).
+    // Returns the total number of files collected.
+    async function collectDroppedFiles(dataTransfer, onFile) {
+      let count = 0;
+      const items = dataTransfer.items;
+
+      if (items && items.length && items[0].webkitGetAsEntry) {
+        const traversals = [];
+        for (let i = 0; i < items.length; i++) {
+          const entry = items[i].webkitGetAsEntry();
+          if (entry) {
+            traversals.push(traverseEntry(entry, '', file => {
+              count++;
+              onFile(file.file, file.relativePath);
+            }));
+          } else {
+            const f = items[i].getAsFile();
+            if (f) {
+              count++;
+              onFile(f, f.name);
+            }
+          }
+        }
+        await Promise.all(traversals);
+      } else {
+        // Fallback for browsers without DataTransferItem entries: files only
+        Array.from(dataTransfer.files).forEach(f => {
+          count++;
+          onFile(f, f.webkitRelativePath || f.name);
+        });
+      }
+
+      return count;
+    }
+
+    async function traverseEntry(entry, path, onFile) {
+      if (entry.isFile) {
+        const file = await new Promise((resolve, reject) => entry.file(resolve, reject));
+        onFile({ file: file, relativePath: path + file.name });
+        return;
+      }
+
+      if (entry.isDirectory) {
+        const reader = entry.createReader();
+        // readEntries returns at most 100 entries per call: loop until empty batch
+        let entries;
+        do {
+          entries = await new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+          for (const child of entries) {
+            await traverseEntry(child, path + entry.name + '/', onFile);
+          }
+        } while (entries.length > 0);
+      }
+    }
+
+    // ==================== Previous (partial) uploads ====================
 
     // Load previous uploads on page load
     async function loadPreviousUploads() {
@@ -596,10 +1386,6 @@
           console.log(`Found ${partialUploads.length} partial uploads`);
 
           partialUploads.forEach(partial => {
-            // Check if file source still exists
-            // Note: We can't check from client-side, so we'll mark it as "file_not_found"
-            // and let user handle it
-
             createPartialUploadItem(partial);
           });
         } else {
@@ -636,7 +1422,7 @@
       div.className = 'upload-item';
       div.id = uploadId;
       div.innerHTML = `
-        <h3>${partial.name}</h3>
+        <h3>${escapeHtml(partial.name)}</h3>
         <div class="file-info">
           <span>Uploaded: ${formatSize(partial.size)} / ${formatSize(partial.totalSize)}</span>
           <span class="status ${statusClass}">${partial.status === 'in_progress' ? 'In Progress' : 'Paused'}</span>
@@ -667,7 +1453,7 @@
           </div>
         `}
         <div class="actions">
-          <button class="btn btn-warning" onclick="resumePartialUpload('${partial.id}', '${partial.name}')" ${!partial.hasData ? 'disabled' : ''}>
+          <button class="btn btn-warning" onclick="resumePartialUpload('${partial.id}', '${escapeHtml(partial.name)}')" ${!partial.hasData ? 'disabled' : ''}>
             🔄 Resume
           </button>
           <button class="btn btn-danger" onclick="deletePartialUpload('${partial.id}', '${uploadId}')">
@@ -711,7 +1497,9 @@
           activeUploads.delete(partialId);
 
           // Start new upload
-          await startUpload(file);
+          beginBatch();
+          enqueueJob(file, file.name);
+          endBatch();
         };
 
         input.click();

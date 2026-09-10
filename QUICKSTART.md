@@ -87,8 +87,9 @@ Navigate to `http://localhost:3000` in your browser.
 
 ## 4. Upload Files
 
-- **Drag & Drop**: Drag files onto the upload zone
-- **Click to Browse**: Click the upload zone to select files
+- **Drag & Drop**: Drag files **or entire folders** onto the upload zone (directory structure is recreated on the server)
+- **Choose Files**: Click "📄 Choose Files" to select one or more files
+- **Choose Folder**: Click "📁 Choose Folder" to select a whole directory tree
 
 ## Key Features
 
@@ -113,9 +114,11 @@ Navigate to `http://localhost:3000` in your browser.
 
 ### Multi-file Upload
 
-- Upload multiple files simultaneously
+
+- Up to `MAX_PARALLEL_UPLOADS` (default 4) files upload simultaneously; the rest wait in a queue
 - Each file has independent progress
-- Pause/resume individual uploads
+- Pause/resume individual uploads, or use Pause All / Resume All / Cancel All
+- Large batches (1000+ files) are grouped by directory with a collapsible card per folder
 
 ## Example Workflow
 

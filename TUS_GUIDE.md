@@ -485,14 +485,14 @@ uploads/
 
 ### Q4: Can I upload multiple files at the same time?
 
-**A**: Yes! FastUpload supports parallel uploads. You can upload 5, 10, or even 20 files simultaneously, each with its own progress.
+**A**: Yes! FastUpload uploads up to `MAX_PARALLEL_UPLOADS` files simultaneously (default: 4, configurable via `.env`). Additional files wait in a queue and start automatically as slots free up — whether you drop 5 files or a 1000-file folder tree.
 
 **How it works**:
 
 - Each file gets its own TUS upload ID
 - Each file has its own offset
-- Each file uploads independently
-- UI shows progress for each file
+- Files upload through a client-side queue (max N in parallel)
+- Large folder batches are grouped by directory in the UI, with a global progress summary
 
 ### Q5: What happens if the server restarts?
 

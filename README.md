@@ -11,7 +11,8 @@ A web-based file upload system optimized for large files (up to 50GB) with chunk
 ✅ **Partial Upload Cleanup** - Delete incomplete uploads from server
 ✅ **Speed Calculation** - Accurate speed/ETA excluding paused time
 ✅ **Memory Efficient** - Streams files without loading into memory
-✅ **Parallel Uploads** - Upload multiple files simultaneously
+✅ **Parallel Uploads** - Upload multiple files simultaneously (max 4 concurrent by default, configurable queue)
+✅ **Folder Uploads** - Drag & drop entire folders or use the folder picker; directory structure is recreated on the server
 ✅ **TUS Protocol** - Uses industry-standard TUS resumable upload protocol
 ✅ **Web Interface** - Beautiful, drag-and-drop interface  
 
@@ -136,8 +137,10 @@ If an upload is interrupted:
 
 - **Pause** - Temporarily stop an upload
 - **Resume** - Continue paused uploads
-- **Cancel** - Cancel and remove an upload
 - **Multiple Files** - Upload several files in parallel
+- **Folders** - Drag & drop a folder (or "Choose Folder"): the full directory tree is recreated under the upload directory. File paths are sanitized (`..`, absolute paths and drive letters are stripped), so uploads can never escape the upload directory.
+- **Batch Queue** - When uploading many files, up to `MAX_PARALLEL_UPLOADS` (default 4) upload simultaneously; the rest wait in a queue with a global progress summary, global speed/ETA, and Pause All / Resume All / Cancel All / Clear Completed controls.
+- **Scales to 1000+ files** - Large batches are grouped by directory (one collapsible card per folder with aggregate progress) instead of rendering one card per file; DOM stays small and responsive. Stress-tested with 1100 files across 11 directories.
 
 ## Configuration
 
