@@ -128,27 +128,31 @@
       background: #f9f9f9;
       border: 1px solid #e0e0e0;
       border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 15px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
     }
 
-    .upload-item h3 {
-      color: #333;
-      margin-bottom: 10px;
-      font-size: 16px;
-      word-break: break-all;
-    }
-
-    .upload-item .file-info {
+    .card-top {
       display: flex;
-      justify-content: space-between;
-      color: #666;
-      font-size: 14px;
-      margin-bottom: 15px;
+      align-items: center;
+      gap: 10px;
     }
 
-    .progress-container {
-      margin-bottom: 10px;
+    .card-top .status {
+      min-width: 84px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .card-name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
     }
 
     .progress-bar {
@@ -166,19 +170,65 @@
       border-radius: 4px;
     }
 
-    .progress-text {
+    .card-meta {
       display: flex;
-      justify-content: space-between;
-      margin-top: 8px;
-      font-size: 14px;
+      align-items: center;
+      gap: 8px;
+      row-gap: 2px;
+      margin-top: 6px;
+      font-size: 12px;
       color: #666;
+      flex-wrap: wrap;
+    }
+
+    .upload-item .progress-bar {
+      flex: 1;
+      min-width: 80px;
+      height: 6px;
+    }
+
+    .card-meta .percentage {
+      min-width: 34px;
+      text-align: right;
+      font-weight: 600;
+      color: #444;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-meta .size-info,
+    .card-meta .speed,
+    .card-meta .eta {
+      white-space: nowrap;
+    }
+
+    .card-meta .speed:empty,
+    .card-meta .eta:empty {
+      display: none;
+    }
+
+    .hint-box {
+      margin-top: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #666;
+      border-radius: 4px;
+    }
+
+    .hint-box.warn {
+      background: #fff3e0;
+      border-left: 3px solid #ff9800;
+    }
+
+    .hint-box.danger {
+      background: #ffebee;
+      border-left: 3px solid #f44336;
     }
 
     .status {
       display: inline-block;
-      padding: 4px 12px;
+      padding: 3px 10px;
       border-radius: 12px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       white-space: nowrap;
@@ -215,9 +265,14 @@
     }
 
     .actions {
-      margin-top: 15px;
       display: flex;
-      gap: 10px;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .actions .btn {
+      padding: 3px 10px;
+      font-size: 12px;
     }
 
     .btn {
@@ -256,9 +311,10 @@
     }
 
     .chunk-info {
-      font-size: 12px;
+      font-size: 11px;
       color: #999;
-      margin-top: 5px;
+      margin-top: 3px;
+      word-break: break-all;
     }
 
     .info {
@@ -775,26 +831,19 @@
       const div = document.createElement('div');
       div.className = 'upload-item';
       div.innerHTML = `
-        <h3>${escapeHtml(job.relativePath)}</h3>
-        <div class="file-info">
-          <span>Size: ${formatSize(job.size)}</span>
+        <div class="card-top">
           <span class="status ${job.state}">${STATE_LABELS[job.state]}</span>
+          <span class="card-name" title="${escapeHtml(job.relativePath)}">${escapeHtml(job.relativePath)}</span>
+          <span class="actions"></span>
         </div>
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: 0%"></div>
-          </div>
-          <div class="progress-text">
-            <span class="percentage">0%</span>
-            <span class="size-info">0 / ${formatSize(job.size)}</span>
-          </div>
-        </div>
-        <div class="chunk-info">Waiting for a free slot...</div>
-        <div class="progress-text" style="margin-top: 10px;">
+        <div class="card-meta">
+          <span class="percentage">0%</span>
+          <span class="progress-bar"><span class="progress-fill" style="width: 0%"></span></span>
+          <span class="size-info">0 / ${formatSize(job.size)}</span>
           <span class="speed"></span>
           <span class="eta"></span>
         </div>
-        <div class="actions"></div>
+        <div class="chunk-info">Waiting for a free slot...</div>
       `;
       uploadList.appendChild(div);
       job.els = {
@@ -833,9 +882,9 @@
           <button type="button" class="btn btn-danger" onclick="cancelUpload('${job.id}')">Cancel</button>
         `;
       } else if (job.state === 'completed') {
-        e.actions.innerHTML = e.chunkInfo
-          ? `<button type="button" class="btn btn-primary" onclick="location.reload()">Upload More</button>`
-          : '';
+        // No per-card action: the drop zone above is the single entry point
+        // for new uploads.
+        e.actions.innerHTML = '';
       } else {
         // queued
         e.actions.innerHTML = `
@@ -1422,52 +1471,27 @@
       div.className = 'upload-item';
       div.id = uploadId;
       div.innerHTML = `
-        <h3>${escapeHtml(partial.name)}</h3>
-        <div class="file-info">
-          <span>Uploaded: ${formatSize(partial.size)} / ${formatSize(partial.totalSize)}</span>
+        <div class="card-top">
           <span class="status ${statusClass}">${partial.status === 'in_progress' ? 'In Progress' : 'Paused'}</span>
+          <span class="card-name" title="${escapeHtml(partial.name)}">${escapeHtml(partial.name)}</span>
+          <span class="actions">
+            <button type="button" class="btn btn-warning" onclick="resumePartialUpload('${partial.id}', '${escapeHtml(partial.name)}')" ${!partial.hasData ? 'disabled' : ''}>🔄 Resume</button>
+            <button type="button" class="btn btn-danger" onclick="deletePartialUpload('${partial.id}', '${uploadId}')">🗑️ Delete</button>
+          </span>
         </div>
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${progressWidth}%"></div>
-          </div>
-          <div class="progress-text">
-            <span class="percentage">${partial.progress}%</span>
-            <span class="size-info">${formatSize(partial.size)} / ${formatSize(partial.totalSize)}</span>
-          </div>
+        <div class="card-meta">
+          <span class="percentage">${partial.progress}%</span>
+          <span class="progress-bar"><span class="progress-fill" style="width: ${progressWidth}%"></span></span>
+          <span class="size-info">${formatSize(partial.size)} / ${formatSize(partial.totalSize)}</span>
         </div>
-        <div class="chunk-info">
-          ${statusMessage}
-        </div>
+        <div class="chunk-info">${statusMessage}</div>
         ${partial.hasData ? `
-          <div class="info" style="margin-top: 8px; padding: 8px; background: #fff3e0; border-radius: 4px; border-left: 3px solid #ff9800;">
-            <strong>💡 How to resume:</strong><br>
-            1. Click "Resume" button below<br>
-            2. Select the original file from your computer<br>
-            3. Upload will continue from ${partial.progress}% (${formatSize(partial.size)})
-          </div>
+          <div class="hint-box warn">💡 Resume: click "Resume" and select the original file — upload continues from ${partial.progress}% (${formatSize(partial.size)}).</div>
         ` : `
-          <div class="info" style="margin-top: 8px; padding: 8px; background: #ffebee; border-radius: 4px; border-left: 3px solid #f44336;">
-            <strong>⚠️ Upload interrupted (0 bytes uploaded)</strong><br>
-            No data on server. Start fresh upload when ready.
-          </div>
+          <div class="hint-box danger">⚠️ Upload interrupted (0 bytes uploaded). No data on server; start a fresh upload.</div>
         `}
-        <div class="actions">
-          <button class="btn btn-warning" onclick="resumePartialUpload('${partial.id}', '${escapeHtml(partial.name)}')" ${!partial.hasData ? 'disabled' : ''}>
-            🔄 Resume
-          </button>
-          <button class="btn btn-danger" onclick="deletePartialUpload('${partial.id}', '${uploadId}')">
-            🗑️ Delete
-          </button>
-        </div>
       `;
       uploadList.appendChild(div);
-
-      // Store partial upload info
-      activeUploads.set(uploadId, {
-        partial: partial,
-        status: 'waiting'
-      });
     }
 
     // Resume partial upload

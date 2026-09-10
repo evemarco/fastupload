@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `/api/uploads` and startup cleanup now walk subdirectories recursively; cleanup removes emptied directories
 - DOM updates throttled via requestAnimationFrame scheduler with background-tab fallback
+- Upload cards redesigned to a compact 2–3 line layout (status badge, filename, inline actions on one row; progress bar, size, speed and ETA on the next) — ~60% less vertical space per file
+- Removed the per-card "Upload More" button on completed uploads; the drop zone is the single entry point for new uploads
 - File/folder names HTML-escaped in the UI (XSS hardening)
 
 ### Dependencies

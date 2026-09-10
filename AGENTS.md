@@ -232,6 +232,7 @@ No automated tests exist in this codebase.
 - **rAF-throttled DOM updates**: progress events only mark jobs dirty; a single scheduler loop applies updates once per frame (`scheduleFlush`/`applyPendingDomUpdates`). Falls back to `setTimeout(250)` when `document.visibilityState !== 'visible'` (hidden tabs never fire rAF — discovered via headless test).
 - **Streaming enqueue**: dropped-folder traversal calls `enqueueJob` per discovered file inside a batch session (`beginBatch`/`endBatch`); the queue starts draining at `endBatch`, rendering mode decided once per batch.
 - **Batch controls**: Pause All / Resume All / Cancel All / Clear Completed buttons in the summary bar; global speed = sum of active uploads, ETA = remaining bytes / global speed.
+- **Compact Card Design (2026-09)**: Rich cards (~55px vs ~150px) — row 1: status badge + filename (ellipsis, `title` = full relative path) + inline action buttons; row 2: percentage + 6px progress bar + size + speed + ETA (`:empty` hides speed/ETA); optional row 3: chunk N/M / duration / error message. Partial-upload cards use the same layout with a one-line `hint-box` instead of a multi-line instruction block. No per-card "Upload More" button on completed uploads — the drop zone is the single entry point for new uploads (no `location.reload()`).
 
 #### Speed/ETA Calculation (2026-01)
 
